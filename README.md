@@ -1,5 +1,12 @@
-# Nu primesc notă pentru că nu am pus titlu și descriere
+Volleyball Match Tactical Hub
 
+Simulator tactic și managerial de meciuri de volei în C++.
+
+## Descriere (Tema 0)
+Aplicația simulează gestionarea unei echipe de volei și desfășurarea tactică a meciurilor:
+- **Formarea echipei:** Utilizatorul (antrenorul) își formează lotul (6 titulari pe posturi specifice: Setter, 2 Middle Blockers, 2 Outside Hitters, 1 Opposite Hitter + 1 Libero și 3 rezerve) dintr-o listă de jucători încărcată din fișier, respectând plafoane maxime de statistici.
+- **Meciul și Rotațiile:** Meciurile se joacă în sistem cel mai bun din 3 seturi până la 15 puncte (cu avantaj la 14-14), incluzând rotația oficială pe cele două linii, schimbul automat Libero - Middle Blocker pe linia a doua și gestionarea celor 2 time-out-uri pe set pentru refacerea staminei.
+- **Simularea Raliului:** Fiecare fază implică decizii tactice (Topspin vs Float serve, blocaj în 1, 2 sau 3 jucători) și calculează dinamic calitatea preluării (1-3 puncte), acuratețea pasei coordonatorului, puterea atacului în raport cu înălțimea fileului (2.43m), oboseala (stamina) și riscul de accidentare.
 ### Folosiți template-ul corespunzător grupei voastre!
 
 | Laborant  | Link template                                |
@@ -33,8 +40,8 @@ O cerință nu se consideră îndeplinită dacă este realizată doar prin cod g
 
 ### Tema 0
 
-- [ ] Nume proiect (poate fi schimbat ulterior)
-- [ ] Scurtă descriere a temei alese, ce v-ați propus să implementați
+- [x] Nume proiect (poate fi schimbat ulterior)
+- [x] Scurtă descriere a temei alese, ce v-ați propus să implementați
 
 ## Tema 1
 
