@@ -35,7 +35,7 @@ public:
     double executaBlocaj();
     bool esteIndisponibil() const;
     int getPunctajTotal() const;
-    std::string getNume() const;
+    const std::string getNume() const;
 
     friend std::ostream& operator<<(std::ostream& os, const Jucator& j);
 

@@ -114,7 +114,7 @@ int Jucator::getPunctajTotal() const {
     return statistici.calculeazaPunctajTotal();
 }
 
-std::string Jucator::getNume() const {
+const std::string Jucator::getNume() const {
     return nume;
 }
 
