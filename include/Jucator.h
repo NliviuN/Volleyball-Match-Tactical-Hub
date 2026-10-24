@@ -26,6 +26,8 @@ private:
     bool accidentat;
 
 public:
+    explicit Jucator(std::string nume_, PostJucator post_, StatisticiJucator statistici_, bool accidentat_ = "false"):
+    nume(nume_), post(post_), statistici(statistici_), accidentat(accidentat_){}
     double executaServa(TipServa tip);
     double executaPreluare(double punctajServaAdversa);
     double executaPasa(double punctajPreluare);
