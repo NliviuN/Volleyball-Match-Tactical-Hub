@@ -23,7 +23,7 @@ int StatisticiJucator::calculeazaPunctajTotal() const {
 }
 
 double StatisticiJucator:: calculeazaFactorOboseala() const {
-    return 0.5 + 0.5 * (stamina / 100.0);
+    return 0.5 + 0.5 * (static_cast<double>(stamina) / 100.0);
 }
 
 double StatisticiJucator::getInaltime() const { return inaltime;}

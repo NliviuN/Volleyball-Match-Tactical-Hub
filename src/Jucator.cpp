@@ -2,54 +2,37 @@
 
 #include<random>
 
+double Jucator::aplicaEroare(double valoareBaza, int minEroare, int maxEroare) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> distEroare(minEroare, maxEroare);
+    int procentGreseala = distEroare(gen);
+    return valoareBaza * (1.0 - (procentGreseala / 100.0));
+}
+
 double Jucator::executaServa(TipServa tip) {
 
     double putereBaza = statistici.getServePower() * statistici.calculeazaFactorOboseala();
 
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-
     if (tip == TipServa::TopSpin) {
         statistici.scadeStamina(10);
-
-        std::uniform_int_distribution<int> distEroare(0, 45);
-        int procentGreseala = distEroare(gen);
-
-        double putereTopSpin = putereBaza * 1.20;
-        return putereTopSpin * (1.0 - procentGreseala / 100.0);
-
-
+        putereBaza = putereBaza * 1.20;
+        return aplicaEroare(putereBaza,0,45);
     } else {
         statistici.scadeStamina(5);
-
-        std::uniform_int_distribution<int> distEroare(0, 15);
-        int procentGreseala = distEroare(gen);
-
-        return putereBaza * (1.0 - procentGreseala / 100.0);
+        return aplicaEroare(putereBaza,0,15);
     }
 }
 
 double Jucator::executaPreluare(double punctajServaAdversa) {
-
     statistici.scadeStamina(5);
-
     double preluareBaza = statistici.getReceiveAcuracy() * statistici.calculeazaFactorOboseala();
-
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-
-    int procentGreseala = 0;
-
+    int maxEroare = 30;
     if (post == PostJucator::Libero) {
-        std::uniform_int_distribution<int> distLibero(0, 10);
-        procentGreseala = distLibero(gen);
         preluareBaza *= 1.10;
-    } else {
-        std::uniform_int_distribution<int> distNormal(0, 30);
-        procentGreseala = distNormal(gen);
+        maxEroare = 10;
     }
-
-    double preluare = preluareBaza * (1.0 - procentGreseala / 100.0);
+    double preluare = aplicaEroare(preluareBaza, 0, maxEroare);
     double calitatePreluare = preluare - (punctajServaAdversa * 0.75);
     return calitatePreluare;
 }
@@ -57,12 +40,7 @@ double Jucator::executaPreluare(double punctajServaAdversa) {
 double Jucator::executaPasa(double punctajPreluare) {
     statistici.scadeStamina(5);
     double pasaBaza = statistici.getSendAcuracy() * statistici.calculeazaFactorOboseala();
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-
-    std::uniform_int_distribution<int> distEroare(0, 15);
-    int procentGreseala = distEroare(gen);
-    double pasa = pasaBaza * (1.0 - procentGreseala / 100.0);
+    double pasa = aplicaEroare(pasaBaza, 0, 15);
     double calitatePasa = pasa + (punctajPreluare * 0.50);
     return calitatePasa;
 
@@ -71,11 +49,9 @@ double Jucator::executaPasa(double punctajPreluare) {
 double Jucator::executaAtac(double punctajPasa) {
     statistici.scadeStamina(10);
     double atacBaza = statistici.getAtackPower() * statistici.calculeazaFactorOboseala() * (statistici.getInaltime() / 2.0) ;
+
     static std::random_device rd;
     static std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> distEroare(0, 25);
-    int procentGreseala = distEroare(gen);
-
     std::uniform_int_distribution<int> distAccidentare(0, 100);
     int sansaAccidentare = distAccidentare(gen);
 
@@ -83,7 +59,7 @@ double Jucator::executaAtac(double punctajPasa) {
     if (sansaAccidentare <= pragRisc) {
         accidentat = true;
     }
-    double atac = atacBaza * (1.0 - procentGreseala / 100.0);
+    double atac = aplicaEroare(atacBaza, 0, 25);
     double calitateAtac = atac + (punctajPasa * 0.40);
     return calitateAtac;
 }
@@ -91,19 +67,12 @@ double Jucator::executaAtac(double punctajPasa) {
 double Jucator::executaBlocaj() {
     statistici.scadeStamina(10);
     double blocajBaza = statistici.getBlockAcuracy() * statistici.calculeazaFactorOboseala() * (statistici.getInaltime() / 2.0);
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    int procentGreseala = 0;
+    int maxEroare = 30;
     if (post == PostJucator::MiddleBlocker) {
-        std::uniform_int_distribution<int> distMiddleBlocker(0, 15);
-        procentGreseala = distMiddleBlocker(gen);
+        maxEroare = 15;
         blocajBaza *= 1.15;
-    } else {
-        std::uniform_int_distribution<int> distNormal(0, 30);
-        procentGreseala = distNormal(gen);
     }
-    double blocaj = blocajBaza * (1.0 - procentGreseala / 100.0);
-    return blocaj;
+    return aplicaEroare(blocajBaza, 0, maxEroare);
 }
 
 bool Jucator::esteIndisponibil() const {
@@ -114,8 +83,22 @@ int Jucator::getPunctajTotal() const {
     return statistici.calculeazaPunctajTotal();
 }
 
+void Jucator::cresteStamina(int puncteOdihnire) {
+    statistici.cresteStamina(puncteOdihnire);
+}
+
 const std::string& Jucator::getNume() const {
     return nume;
+}
+
+Jucator& Jucator::operator=(const Jucator& j) {
+    if (this != &j) {
+        nume = j.nume;
+        post = j.post;
+        statistici = j.statistici;
+        accidentat = j.accidentat;
+    }
+    return *this;
 }
 
 std:: ostream& operator<<(std:: ostream& os, const Jucator& j) {
@@ -128,8 +111,23 @@ std:: ostream& operator<<(std:: ostream& os, const Jucator& j) {
         case PostJucator::Setter: os << "Setter"; break;
         case PostJucator::OutsideHitter: os << "Outside Hitter"; break;
     }
-
-    os << ", Punctaj total: " << j.getPunctajTotal();
+    os << ", Inaltime: "<< j.statistici.getInaltime();
+    os << "m, Putere serva: "<< j.statistici.getServePower();
+    os<< ", Acuratete preluare: "<<j.statistici.getReceiveAcuracy();
+    os<< ", Acuratete pase: " << j.statistici.getSendAcuracy();
+    os<< ", Putere Atac: "<< j.statistici.getAtackPower();
+    os<<", Acuratete blocaj: " << j.statistici.getBlockAcuracy();
+    os << ", Punctaj total: " << j.getPunctajTotal()<<std::endl;
     return os;
 }
+
+PostJucator Jucator::getPost() const {
+    return post;
+}
+
+int Jucator::getStamina() const {
+    return statistici.getStamina();
+}
+
+Jucator::~Jucator() = default;
 

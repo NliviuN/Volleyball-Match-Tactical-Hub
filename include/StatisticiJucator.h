@@ -18,8 +18,8 @@ private:
     int stamina;
 
 public :
-    explicit StatisticiJucator(double inaltime_, int servePower_, int receiveAcuracy_,
-        int sendAcuracy_, int atackPower_, int blockAcuracy_, int stamina_ = 100) :
+    explicit StatisticiJucator(double inaltime_ = 2.0, int servePower_ = 70, int receiveAcuracy_ = 70,
+        int sendAcuracy_ = 70, int atackPower_ = 70, int blockAcuracy_ = 70, int stamina_ = 100) :
         inaltime(inaltime_), servePower(servePower_), receiveAcuracy(receiveAcuracy_),
     sendAcuracy(sendAcuracy_), atackPower(atackPower_), blockAcuracy(blockAcuracy_), stamina(stamina_) {}
 
