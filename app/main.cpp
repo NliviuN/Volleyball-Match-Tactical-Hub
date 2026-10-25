@@ -106,8 +106,6 @@ static Echipa creeazaEchipa(const std::string& nume, std::vector<Jucator> &lista
         else std::cout << "Comanda Gresita!"<< std::endl;
         if (middleBlocker !=0 || libero !=0 || setter !=0 || opposite !=0 || outsideHitter != 0) {
             afisareJucatori(listaJucatori);
-        }
-        if (middleBlocker !=0 || libero !=0 || setter !=0 || opposite !=0 || outsideHitter != 0) {
             std::cout<< "Mai ai de ales " << (libero + opposite + outsideHitter + middleBlocker + setter) <<" jucatori! ";
             std::cout<<"(Middle Blocker: " << middleBlocker << ", ";
             std::cout<<"Opposite: " << opposite << ", ";
@@ -146,7 +144,7 @@ static Echipa creeazaEchipaAutomata(const std::string& nume, std::vector<Jucator
         }
     }
 
-    PostJucator posturiCerute[6] = {
+    const PostJucator posturiCerute[6] = {
         PostJucator::OutsideHitter,
         PostJucator::Setter,
         PostJucator::MiddleBlocker,
@@ -189,7 +187,7 @@ static void configureazaTeren(Echipa &echipa) {
             PostJucator::MiddleBlocker
         };
 
-        static constexpr std::string numePosturi[6] = {
+        static const std::string numePosturi[6] = {
             "OutsideHitter",
             "Setter",
             "MiddleBlocker",
