@@ -102,6 +102,10 @@ void Set::afisareMeniuTactic() {
         std::cout << "Alege o optiune: ";
         std::cin >> optiune;
 
+        if (std::cin.eof()) {
+            return;
+        }
+
         if (std::cin.fail()) {
             std::cin.clear();
             std::cin.ignore(10000,'\n');
@@ -376,9 +380,17 @@ void Set::simuleazaRaliu() {
 void Set::joacaSet() {
     std::cout << " Incepe setul: " << echipaMea.getNumeEchipa() << " vs " << echipaAdversa.getNumeEchipa() << std::endl;
 
-    while ((puncteProprii < 25 && puncteAdversari < 25) || std::abs(puncteProprii - puncteAdversari) < 2) {
+    while ((!std::cin.eof() && puncteProprii < 25 && puncteAdversari < 25) || std::abs(puncteProprii - puncteAdversari) < 2) {
         afisareMeniuTactic();
+        if (std::cin.eof()) {
+            break;
+        }
+
         simuleazaRaliu();
+
+        if (std::cin.eof()) {
+            break;
+        }
     }
 
     if (AmCastigat()) {
@@ -386,5 +398,4 @@ void Set::joacaSet() {
     } else {
         std::cout << " SET CASTIGAT DE " << echipaAdversa.getNumeEchipa() << " (" << puncteAdversari << " - " << puncteProprii << ")!" <<std::endl;
     }
-    std::cout << "======================================================\n";
 }
