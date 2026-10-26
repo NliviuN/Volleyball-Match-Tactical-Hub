@@ -5,6 +5,8 @@
 #include "Jucator.h"
 #include "Echipa.h"
 #include "Set.h"
+// cppcheck-suppress missingInclude
+# include  "nlohmann/json.hpp"
 
 static std::vector<Jucator> citesteJucatoriDinFisier(const std::string& numeFisier) {
     std::vector<Jucator> listaJucatori;
@@ -15,32 +17,31 @@ static std::vector<Jucator> citesteJucatoriDinFisier(const std::string& numeFisi
         return listaJucatori;
     }
 
-    std::string linie;
-    while (std::getline(fisier, linie)) {
-        if (linie.empty()) continue;
-        std::stringstream ss(linie);
-        std::string nume, postStr;
-        double inaltime;
-        int serva, preluare, pasa, atac, block, stamina;
-        char virgula;
-        std::getline(ss, nume, ',');
-        std::getline(ss, postStr, ',');
-        ss >> inaltime >> virgula >> serva >> virgula >> preluare >>virgula >> pasa >> virgula>> atac >> virgula >> block >> virgula >> stamina;
-        while (!postStr.empty() && postStr[0] == ' ') {
-            postStr.erase(0, 1);
-        }
+    nlohmann::json jData;
+    fisier >> jData;
+
+    for (const auto& elem : jData) {
+        std::string nume = elem["nume"];
+        std::string postStr = elem["post"];
+        double inaltime = elem["inaltime"];
+        int serva = elem["serva"];
+        int preluare = elem["preluare"];
+        int pasa = elem["pasa"];
+        int atac = elem["atac"];
+        int block = elem["block"];
+        int stamina = elem["stamina"];
+
         PostJucator post = PostJucator::OutsideHitter;
         if (postStr == "Setter") post = PostJucator::Setter;
         else if (postStr == "MiddleBlocker") post = PostJucator::MiddleBlocker;
         else if (postStr == "Opposite") post = PostJucator::Opposite;
         else if (postStr == "Libero") post = PostJucator::Libero;
 
-        StatisticiJucator stats(inaltime, serva, preluare, pasa, atac, block, stamina );
+        StatisticiJucator stats(inaltime, serva, preluare, pasa, atac, block, stamina);
         Jucator jucator(nume, post, stats);
-
         listaJucatori.push_back(jucator);
-
     }
+
     return listaJucatori;
 }
 
@@ -235,7 +236,7 @@ static void configureazaTeren(Echipa &echipa) {
 
 int main() {
     std::vector<Jucator> listaJucatori;
-    listaJucatori = citesteJucatoriDinFisier("jucatori.txt");
+    listaJucatori = citesteJucatoriDinFisier("jucatori.json");
     Echipa echipa = creeazaEchipa("Steaua",listaJucatori);
     configureazaTeren(echipa);
     Echipa echipa2 = creeazaEchipaAutomata("Dinamo",listaJucatori);
