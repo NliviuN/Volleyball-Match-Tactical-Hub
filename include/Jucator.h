@@ -28,7 +28,6 @@ private:
     static double aplicaEroare(double valoareBaza, int minEroare, int maxEroare);
 
 public:
-    Jucator& operator=(const Jucator &j);
     explicit Jucator(std::string nume_ = "Liber", PostJucator post_ = PostJucator::OutsideHitter,const StatisticiJucator& statistici_ = StatisticiJucator(), bool accidentat_ = false):
     nume(std:: move(nume_)), post(post_), statistici(statistici_), accidentat(accidentat_){}
     double executaServa(TipServa tip);
@@ -43,6 +42,8 @@ public:
     PostJucator getPost() const;
     int getStamina() const;
     friend std::ostream& operator<<(std::ostream& os, const Jucator& j);
-    ~Jucator();
+    Jucator(const Jucator &j) = default;
+    ~Jucator() = default;
+    Jucator& operator=(const Jucator &j);
 };
 #endif //OOP_JUCATOR_H

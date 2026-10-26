@@ -129,5 +129,3 @@ int Jucator::getStamina() const {
     return statistici.getStamina();
 }
 
-Jucator::~Jucator() = default;
-
