@@ -6,7 +6,8 @@
 #include "Echipa.h"
 #include "Set.h"
 // cppcheck-suppress missingInclude
-# include  "nlohmann/json.hpp"
+#include  "nlohmann/json.hpp"
+#include "Meci.h"
 
 static std::vector<Jucator> citesteJucatoriDinFisier(const std::string& numeFisier) {
     std::vector<Jucator> listaJucatori;
@@ -240,9 +241,24 @@ int main() {
     Echipa echipa = creeazaEchipa("Steaua",listaJucatori);
     configureazaTeren(echipa);
     Echipa echipa2 = creeazaEchipaAutomata("Dinamo",listaJucatori);
+    Meci meci(echipa,echipa2);
+    meci.afiseazaScorul();
+
     Set primulSet(echipa, echipa2);
     primulSet.joacaSet();
-    if (primulSet.AmCastigat()) {
-        std::cout << "Am castigat primul set!" << std::endl;
-    }
+    meci.inregistreazaSet(primulSet, primulSet.AmCastigat());
+    std::cout << meci.determinaStareMeci();
+    meci.afiseazaScorul();
+
+    Set alDoileaSet(echipa, echipa2);
+    alDoileaSet.joacaSet();
+    meci.inregistreazaSet(alDoileaSet, alDoileaSet.AmCastigat());
+    std::cout << meci.determinaStareMeci();
+    meci.afiseazaScorul();
+
+    Set alTreileaSet(echipa, echipa2);
+    alTreileaSet.joacaSet();
+    meci.inregistreazaSet(alTreileaSet, alTreileaSet.AmCastigat());
+    std::cout << meci.determinaStareMeci();
+    meci.afiseazaScorul();
 }

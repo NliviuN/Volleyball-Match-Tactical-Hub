@@ -380,7 +380,7 @@ void Set::simuleazaRaliu() {
 void Set::joacaSet() {
     std::cout << " Incepe setul: " << echipaMea.getNumeEchipa() << " vs " << echipaAdversa.getNumeEchipa() << std::endl;
 
-    while ((!std::cin.eof() && puncteProprii < 25 && puncteAdversari < 25) || std::abs(puncteProprii - puncteAdversari) < 2) {
+    while ((!std::cin.eof() && puncteProprii < 5 && puncteAdversari < 5) || std::abs(puncteProprii - puncteAdversari) < 2) {
         afisareMeniuTactic();
         if (std::cin.eof()) {
             break;

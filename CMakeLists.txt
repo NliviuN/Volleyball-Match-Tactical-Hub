@@ -75,6 +75,7 @@ target_sources(${MAIN_LIBRARY_NAME}
         src/Jucator.cpp
         src/Echipa.cpp
         src/Set.cpp
+        src/Meci.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
