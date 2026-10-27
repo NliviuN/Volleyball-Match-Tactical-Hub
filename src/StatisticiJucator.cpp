@@ -35,8 +35,8 @@ int StatisticiJucator::getAtackPower() const { return atackPower;}
 int StatisticiJucator::getStamina() const {return stamina;}
 
 std::ostream& operator<<(std::ostream& os, const StatisticiJucator& s) {
-    os << "H: " << s.inaltime << " m | SRV: " << s.servePower << " | REC: "
-    << s.receiveAcuracy << " | SET: " << s.sendAcuracy << " | ATK: " << s.atackPower
-    << " |BLK: " << s.blockAcuracy << " | Total" << s.calculeazaPunctajTotal();
+    os << "H: " << s.getInaltime() << " m | SRV: " << s.getServePower() << " | REC: "
+    << s.getReceiveAcuracy() << " | SET: " << s.getSendAcuracy() << " | ATK: " << s.getAtackPower()
+    << " |BLK: " << s.getBlockAcuracy() << " | Total" << s.calculeazaPunctajTotal();
     return os;
 }

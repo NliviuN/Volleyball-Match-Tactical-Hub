@@ -101,6 +101,18 @@ Jucator& Jucator::operator=(const Jucator& j) {
     return *this;
 }
 
+const StatisticiJucator& Jucator::getStatistici() const {
+    return statistici;
+};
+
+PostJucator Jucator::getPost() const {
+    return post;
+}
+
+int Jucator::getStamina() const {
+    return statistici.getStamina();
+}
+
 std:: ostream& operator<<(std:: ostream& os, const Jucator& j) {
     os << "Jucator: " << j.getNume() << ", Post: ";
 
@@ -111,21 +123,15 @@ std:: ostream& operator<<(std:: ostream& os, const Jucator& j) {
         case PostJucator::Setter: os << "Setter"; break;
         case PostJucator::OutsideHitter: os << "Outside Hitter"; break;
     }
-    os << ", Inaltime: "<< j.statistici.getInaltime();
-    os << "m, Putere serva: "<< j.statistici.getServePower();
-    os<< ", Acuratete preluare: "<<j.statistici.getReceiveAcuracy();
-    os<< ", Acuratete pase: " << j.statistici.getSendAcuracy();
-    os<< ", Putere Atac: "<< j.statistici.getAtackPower();
-    os<<", Acuratete blocaj: " << j.statistici.getBlockAcuracy();
+    os << ", Inaltime: "<< j.getStatistici().getInaltime();
+    os << "m, Putere serva: "<< j.getStatistici().getServePower();
+    os<< ", Acuratete preluare: "<<j.getStatistici().getReceiveAcuracy();
+    os<< ", Acuratete pase: " << j.getStatistici().getSendAcuracy();
+    os<< ", Putere Atac: "<< j.getStatistici().getAtackPower();
+    os<<", Acuratete blocaj: " << j.getStatistici().getBlockAcuracy();
     os << ", Punctaj total: " << j.getPunctajTotal()<<std::endl;
     return os;
 }
 
-PostJucator Jucator::getPost() const {
-    return post;
-}
 
-int Jucator::getStamina() const {
-    return statistici.getStamina();
-}
 

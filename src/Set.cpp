@@ -399,3 +399,16 @@ void Set::joacaSet() {
         std::cout << " SET CASTIGAT DE " << echipaAdversa.getNumeEchipa() << " (" << puncteAdversari << " - " << puncteProprii << ")!" <<std::endl;
     }
 }
+
+const Echipa& Set::getEchipaAdversa() const { return echipaAdversa; }
+
+const Echipa& Set::getEchipaMea() const { return echipaMea; }
+
+int Set::getPuncteAdversari() const { return puncteAdversari; }
+
+int Set::getPuncteProprii() const { return puncteProprii; }
+
+std::ostream& operator<< (std::ostream& os, const Set& set) {
+    os << set.getEchipaMea() << " vs " << set.getEchipaAdversa() << " (" << set.getPuncteProprii() << "-" << set.getPuncteAdversari() << ")" << std::endl;
+    return os;
+}

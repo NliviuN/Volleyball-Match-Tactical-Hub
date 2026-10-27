@@ -40,10 +40,15 @@ void Meci::afiseazaScorul() const {
     std::cout << "Scor: " <<echipaGazda.getNumeEchipa() << " (" << seturiCastigateGazda << ") - " << echipaOaspete.getNumeEchipa() << " (" << seturiCastigateOaspete << ")" << std::endl;
 }
 
+int Meci::getSeturiCastigateGazda() const { return seturiCastigateGazda;}
+
+int Meci::getSeturiCastigateOaspete() const { return seturiCastigateOaspete; }
+
+const std::vector<Set>& Meci::getSeturiJucate() const { return seturiJucate; }
 std::ostream& operator<<(std::ostream& os, const Meci& meci) {
     os<<"Rezumat meci: "<<std::endl;
-    os<< "Total seturi disputate: " << meci.seturiJucate.size() << std::endl;
-    os<< "Scor general seturi: " << meci.seturiCastigateGazda << " - " << meci.seturiCastigateOaspete << std::endl;
+    os<< "Total seturi disputate: " << meci.getSeturiJucate().size() << std::endl;
+    os<< "Scor general seturi: " << meci.getSeturiCastigateGazda() << " - " << meci.getSeturiCastigateOaspete() << std::endl;
     os<< "Status: " << meci.determinaStareMeci() << std::endl;
     return os;
 }

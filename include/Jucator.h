@@ -41,6 +41,7 @@ public:
     const std::string& getNume() const;
     PostJucator getPost() const;
     int getStamina() const;
+    const StatisticiJucator& getStatistici() const;
     friend std::ostream& operator<<(std::ostream& os, const Jucator& j);
     Jucator(const Jucator &j) = default;
     ~Jucator() = default;

@@ -221,11 +221,13 @@ int Echipa::getSetter() const {
 
 const std::vector<Jucator>& Echipa::getLot() const { return lot; }
 
+const std::array<Jucator, 6>& Echipa::getTeren() const { return teren;}
+
 std::ostream& operator<<(std::ostream& os, const Echipa& e) {
     os << e.getNumeEchipa() << std::endl;
     os << "Titulari: ";
-    for (const auto& j : e.teren) {
-        os << j.getNume() << std::endl;
+    for (const auto& j : e.getTeren()) {
+        os << j << std::endl;
     }
     return os;
 }

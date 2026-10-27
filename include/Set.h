@@ -21,5 +21,11 @@ public:
     Set(Echipa e1, Echipa e2);
     void joacaSet();
     bool AmCastigat() const;
+    friend std::ostream& operator<< (std::ostream& os, const Set& set);
+
+    int getPuncteProprii() const;
+    int getPuncteAdversari() const;
+    const Echipa& getEchipaMea() const;
+    const Echipa& getEchipaAdversa() const;
 };
 #endif //OOP_SET_H

@@ -41,6 +41,7 @@ public:
     Jucator& getJucator(int zona);
     int getSetter() const;
     const std::vector<Jucator>& getLot() const;
+    const std::array<Jucator, 6>& getTeren() const;
     friend std::ostream& operator<<(std::ostream& os, const Echipa& e);
 
 };

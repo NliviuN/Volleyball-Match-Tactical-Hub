@@ -27,6 +27,10 @@ public:
     std::string determinaStareMeci() const;
     void afiseazaScorul() const;
 
+    int getSeturiCastigateGazda() const;
+    int getSeturiCastigateOaspete() const;
+    const std::vector<Set>& getSeturiJucate() const;
+
 
     friend std::ostream& operator<<(std::ostream& os, const Meci& meci);
 };
