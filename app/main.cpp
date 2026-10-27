@@ -9,6 +9,11 @@
 #include  "nlohmann/json.hpp"
 #include "Meci.h"
 
+struct EchipaSalvata {
+    Echipa echipa;
+    std::vector<Jucator> jucatoriRamasi;
+};
+
 static std::vector<Jucator> citesteJucatoriDinFisier(const std::string& numeFisier) {
     std::vector<Jucator> listaJucatori;
     std::ifstream fisier(numeFisier);
@@ -235,30 +240,104 @@ static void configureazaTeren(Echipa &echipa) {
     std::cout << std::endl << "Echipa de start a fost asezata pe teren!" << std::endl;
 }
 
+static void joacaMeciComplet(const Echipa &echipa1, const Echipa &echipa2) {
+    Meci meci(echipa1, echipa2);
+    meci.afiseazaScorul();
+
+    while (!meci.esteMeciulTerminat()) {
+        Set setCurent(echipa1, echipa2);
+        setCurent.joacaSet();
+        meci.inregistreazaSet(setCurent, setCurent.AmCastigat());
+        std::cout << meci.determinaStareMeci() << std::endl;
+        meci.afiseazaScorul();
+    }
+}
+
 int main() {
     std::vector<Jucator> listaJucatori;
     listaJucatori = citesteJucatoriDinFisier("jucatori.json");
-    Echipa echipa = creeazaEchipa("Steaua",listaJucatori);
-    configureazaTeren(echipa);
-    Echipa echipa2 = creeazaEchipaAutomata("Dinamo",listaJucatori);
-    Meci meci(echipa,echipa2);
-    meci.afiseazaScorul();
+    std::vector<EchipaSalvata> echipeCreate;
+    int optiuneMeniu = 0;
+    while (true) {
+        std::cout << "===============================" << std::endl;
+        std::cout << "         MENIU PRINCIPAL       " << std::endl;
+        std::cout << "===============================" << std::endl;
+        std::cout << "1. Creeaza echipa" << std::endl;
+        std::cout << "2. Alege echipa" << std::endl;
+        std::cout << "3. Exit" << std::endl;
+        std::cout << "Alege o optiune: ";
 
-    Set primulSet(echipa, echipa2);
-    primulSet.joacaSet();
-    meci.inregistreazaSet(primulSet, primulSet.AmCastigat());
-    std::cout << meci.determinaStareMeci();
-    meci.afiseazaScorul();
+        if (!(std::cin >> optiuneMeniu)) {
+            break;
+        }
 
-    Set alDoileaSet(echipa, echipa2);
-    alDoileaSet.joacaSet();
-    meci.inregistreazaSet(alDoileaSet, alDoileaSet.AmCastigat());
-    std::cout << meci.determinaStareMeci();
-    meci.afiseazaScorul();
+        if (optiuneMeniu == 1) {
+            std::cout << "Introdu numele echipei: ";
+            std::string numeEchipa;
+            if (!(std::cin >> numeEchipa)) {
+                break;
+            }
 
-    Set alTreileaSet(echipa, echipa2);
-    alTreileaSet.joacaSet();
-    meci.inregistreazaSet(alTreileaSet, alTreileaSet.AmCastigat());
-    std::cout << meci.determinaStareMeci();
-    meci.afiseazaScorul();
+            std::vector<Jucator> jucatoriDisponibili = listaJucatori;
+            Echipa echipaNoua = creeazaEchipa(numeEchipa, jucatoriDisponibili);
+            configureazaTeren(echipaNoua);
+
+            echipeCreate.push_back({echipaNoua, jucatoriDisponibili});
+            std::cout << "Echipa " << numeEchipa << " a fost adaugata automat in 'Alege echipa'!" << std::endl;
+
+        } else if (optiuneMeniu == 2) {
+            if (echipeCreate.empty()) {
+                std::cout << "Nu exista nicio echipa creata! Creeaza una mai intai." << std::endl;
+                continue;
+            }
+
+            std::cout << "Alege echipa:" << std::endl;
+            for (int i = 0; i < static_cast<int>(echipeCreate.size()); ++i) {
+                std::cout << i + 1 << ". " << echipeCreate[i].echipa.getNumeEchipa() << std::endl;
+            }
+            std::cout << "Alege numarul echipei: ";
+
+            int indexEchipa = 0;
+            if (!(std::cin >> indexEchipa)) {
+                break;
+            }
+
+            if (indexEchipa < 1 || indexEchipa > static_cast<int>(echipeCreate.size())) {
+                std::cout << "Numar invalid! Revenire la meniul principal." << std::endl;
+                continue;
+            }
+
+            EchipaSalvata selectie = echipeCreate[indexEchipa - 1];
+            std::cout << "Ai ales echipa: " << selectie.echipa.getNumeEchipa() << std::endl;
+
+            std::cout << "1. Joaca" << std::endl;
+            std::cout << "2. Exit" << std::endl;
+            std::cout << "Alege o optiune: ";
+
+            int optiuneJoc = 0;
+            if (!(std::cin >> optiuneJoc)) {
+                break;
+            }
+
+            if (optiuneJoc == 1) {
+                std::vector<Jucator> ramasiPentruAdversar = selectie.jucatoriRamasi;
+                Echipa echipaAdversa = creeazaEchipaAutomata("Adversar_" + selectie.echipa.getNumeEchipa(), ramasiPentruAdversar);
+
+                joacaMeciComplet(selectie.echipa, echipaAdversa);
+            } else if (optiuneJoc == 2) {
+                std::cout << "Iesire din joc" << std::endl;
+                break;
+            } else {
+                std::cout << "Optiune invalida!" << std::endl;
+            }
+
+        } else if (optiuneMeniu == 3) {
+            std::cout << "Exit!" << std::endl;
+            break;
+        } else {
+            std::cout << "Optiune gresita! Alege 1, 2 sau 3." << std::endl;
+        }
+    }
+
+    return 0;
 }
