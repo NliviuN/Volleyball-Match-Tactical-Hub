@@ -212,5 +212,4 @@ The project is licensed under [AGPLv3](LICENSE).
 The [template repository](https://github.com/mcmarius/oop-template) itself is licensed under [Unlicense](LICENSE.template).
 
 ## Resurse
-
-- adăugați trimiteri **detaliate** către resursele externe care v-au ajutat sau pe care le-ați folosit
+[nlohmann/json](https://github.com/nlohmann/json) - Bibliotecă utilizată pentru parsarea fișierelor JSON.

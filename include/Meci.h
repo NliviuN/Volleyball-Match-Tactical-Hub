@@ -27,6 +27,11 @@ public:
     std::string determinaStareMeci() const;
     void afiseazaScorul() const;
 
+    std::string genereazaRaportDetaliat() const;
+    int calculeazaPuncteClasament(bool pentruGazda) const;
+    void reseteazaMeci();
+    void meniuRaportStatistic() const;
+
     int getSeturiCastigateGazda() const;
     int getSeturiCastigateOaspete() const;
     const std::vector<Set>& getSeturiJucate() const;

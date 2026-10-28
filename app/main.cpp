@@ -250,7 +250,9 @@ static void joacaMeciComplet(const Echipa &echipa1, const Echipa &echipa2) {
         meci.inregistreazaSet(setCurent, setCurent.AmCastigat());
         std::cout << meci.determinaStareMeci() << std::endl;
         meci.afiseazaScorul();
+        meci.meniuRaportStatistic();
     }
+    meci.reseteazaMeci();
 }
 
 int main() {
@@ -324,6 +326,7 @@ int main() {
                 Echipa echipaAdversa = creeazaEchipaAutomata("Adversar_" + selectie.echipa.getNumeEchipa(), ramasiPentruAdversar);
 
                 joacaMeciComplet(selectie.echipa, echipaAdversa);
+
             } else if (optiuneJoc == 2) {
                 std::cout << "Iesire din joc" << std::endl;
                 break;

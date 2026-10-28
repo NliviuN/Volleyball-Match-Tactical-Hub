@@ -1,6 +1,16 @@
 #include "StatisticiJucator.h"
 #include <iostream>
 
+StatisticiJucator::StatisticiJucator(double inaltime_ , int servePower_, int receiveAcuracy_,
+    int sendAcuracy_, int atackPower_, int blockAcuracy_, int stamina_)
+    : inaltime(inaltime_),
+      servePower(servePower_),
+      receiveAcuracy(receiveAcuracy_),
+      sendAcuracy(sendAcuracy_),
+      atackPower(atackPower_),
+      blockAcuracy(blockAcuracy_),
+      stamina(stamina_) {}
+
 void StatisticiJucator::scadeStamina(int puncteEfort) {
     stamina -= puncteEfort;
     if (stamina < 0) stamina = 0;
