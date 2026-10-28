@@ -1,8 +1,7 @@
-Volleyball Match Tactical Hub
+# Volleyball Match Tactical Hub
 
 Simulator tactic și managerial de meciuri de volei în C++.
 
-## Descriere (Tema 0)
 Aplicația simulează gestionarea unei echipe de volei și desfășurarea tactică a meciurilor:
 - **Formarea echipei:** Utilizatorul (antrenorul) își formează lotul (6 titulari pe posturi specifice: Setter, 2 Middle Blockers, 2 Outside Hitters, 1 Opposite Hitter + 1 Libero și 3 rezerve) dintr-o listă de jucători încărcată din fișier, respectând plafoane maxime de statistici.
 - **Meciul și Rotațiile:** Meciurile se joacă în sistem cel mai bun din 3 seturi până la 15 puncte (cu avantaj la 14-14), incluzând rotația oficială pe cele două linii, schimbul automat Libero - Middle Blocker pe linia a doua și gestionarea celor 2 time-out-uri pe set pentru refacerea staminei.
@@ -212,5 +211,4 @@ The project is licensed under [AGPLv3](LICENSE).
 The [template repository](https://github.com/mcmarius/oop-template) itself is licensed under [Unlicense](LICENSE.template).
 
 ## Resurse
-
-- adăugați trimiteri **detaliate** către resursele externe care v-au ajutat sau pe care le-ați folosit
+[nlohmann/json](https://github.com/nlohmann/json) - Bibliotecă utilizată pentru parsarea fișierelor JSON.

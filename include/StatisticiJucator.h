@@ -9,19 +9,19 @@
 class StatisticiJucator {
 
 private:
-    double inaltime;
-    int servePower;
-    int receiveAcuracy;
-    int sendAcuracy;
-    int atackPower;
-    int blockAcuracy;
-    int stamina;
+    double inaltime = 2.0;
+    int servePower = 70;
+    int receiveAcuracy = 70;
+    int sendAcuracy = 70;
+    int atackPower = 70;
+    int blockAcuracy = 70;
+    int stamina = 100;
 
 public :
-    explicit StatisticiJucator(double inaltime_ = 2.0, int servePower_ = 70, int receiveAcuracy_ = 70,
-        int sendAcuracy_ = 70, int atackPower_ = 70, int blockAcuracy_ = 70, int stamina_ = 100) :
-        inaltime(inaltime_), servePower(servePower_), receiveAcuracy(receiveAcuracy_),
-    sendAcuracy(sendAcuracy_), atackPower(atackPower_), blockAcuracy(blockAcuracy_), stamina(stamina_) {}
+    StatisticiJucator() = default;
+
+    explicit StatisticiJucator(double inaltime_, int servePower_ = 70, int receiveAcuracy_ = 70,
+        int sendAcuracy_ = 70, int atackPower_ = 70, int blockAcuracy_ = 70, int stamina_ = 100);
 
     void scadeStamina(int puncteEfort);
     void cresteStamina(int puncteOdihna);

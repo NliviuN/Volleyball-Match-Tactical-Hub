@@ -21,15 +21,15 @@ enum class TipServa {
 class Jucator {
 private:
     std::string nume;
-    PostJucator post;
+    PostJucator post = PostJucator::Libero;
     StatisticiJucator statistici;
-    bool accidentat;
+    bool accidentat = false;
 
     static double aplicaEroare(double valoareBaza, int minEroare, int maxEroare);
 
 public:
-    explicit Jucator(std::string nume_ = "Liber", PostJucator post_ = PostJucator::OutsideHitter,const StatisticiJucator& statistici_ = StatisticiJucator(), bool accidentat_ = false):
-    nume(std:: move(nume_)), post(post_), statistici(statistici_), accidentat(accidentat_){}
+    Jucator() = default;
+    explicit Jucator(const std::string & nume_, PostJucator post_ = PostJucator::Libero ,const StatisticiJucator& statistici_ = StatisticiJucator(2.0), bool accidentat_ = false);
     double executaServa(TipServa tip);
     double executaPreluare(double punctajServaAdversa);
     double executaPasa(double punctajPreluare);

@@ -2,6 +2,11 @@
 
 #include<random>
 
+
+Jucator::Jucator(const std::string & nume_, PostJucator post_ ,const StatisticiJucator& statistici_ , bool accidentat_) :
+nume(nume_), post(post_), statistici(statistici_), accidentat(accidentat_)
+{}
+
 double Jucator::aplicaEroare(double valoareBaza, int minEroare, int maxEroare) {
     static std::random_device rd;
     static std::mt19937 gen(rd());
