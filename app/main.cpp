@@ -6,7 +6,7 @@
 #include "Echipa.h"
 #include "Set.h"
 // cppcheck-suppress missingInclude
-#include  "nlohmann/json.hpp"
+#include  <nlohmann/json.hpp>
 #include "Meci.h"
 
 struct EchipaSalvata {
@@ -96,7 +96,7 @@ static Echipa creeazaEchipa(const std::string& nume, std::vector<Jucator> &lista
     int middleBlocker = 3, outsideHitter = 3, libero = 1, setter = 2, opposite = 1;
     std::cout <<"Alege jucatori: "  << std::endl;
     while (middleBlocker !=0 || libero !=0 || setter !=0 || opposite !=0 || outsideHitter != 0) {
-        std::cout << "Alege post: "<< std::endl;
+        std::cout << "Alege post (OutsideHitter, Libero, MiddleBlocker, Opposite, Setter): "<< std::endl;
         std::string comanda;
         std::cin >> comanda;
         if (comanda == "OutsideHitter") {
@@ -250,7 +250,9 @@ static void joacaMeciComplet(const Echipa &echipa1, const Echipa &echipa2) {
         meci.inregistreazaSet(setCurent, setCurent.AmCastigat());
         std::cout << meci.determinaStareMeci() << std::endl;
         meci.afiseazaScorul();
+        meci.meniuRaportStatistic();
     }
+    meci.reseteazaMeci();
 }
 
 int main() {
@@ -324,6 +326,7 @@ int main() {
                 Echipa echipaAdversa = creeazaEchipaAutomata("Adversar_" + selectie.echipa.getNumeEchipa(), ramasiPentruAdversar);
 
                 joacaMeciComplet(selectie.echipa, echipaAdversa);
+
             } else if (optiuneJoc == 2) {
                 std::cout << "Iesire din joc" << std::endl;
                 break;
