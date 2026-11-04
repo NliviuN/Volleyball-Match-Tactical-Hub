@@ -73,7 +73,7 @@ double Jucator::executaBlocaj() {
     statistici.scadeStamina(10);
     double blocajBaza = statistici.getBlockAcuracy() * statistici.calculeazaFactorOboseala() * (statistici.getInaltime() / 2.0);
     int maxEroare = 30;
-    if (post == PostJucator::MiddleBlocker) {
+    if (post == PostJucator::Middle_Blocker) {
         maxEroare = 15;
         blocajBaza *= 1.15;
     }
@@ -122,11 +122,11 @@ std:: ostream& operator<<(std:: ostream& os, const Jucator& j) {
     os << "Jucator: " << j.getNume() << ", Post: ";
 
     switch (j.post) {
-        case PostJucator::MiddleBlocker: os << "Middle Blocker"; break;
+        case PostJucator::Middle_Blocker: os << "Middle Blocker"; break;
         case PostJucator::Libero: os << "Libero"; break;
         case PostJucator::Opposite: os << "Opposite"; break;
         case PostJucator::Setter: os << "Setter"; break;
-        case PostJucator::OutsideHitter: os << "Outside Hitter"; break;
+        case PostJucator::Outside_Hitter: os << "Outside Hitter"; break;
     }
     os << ", Inaltime: "<< j.getStatistici().getInaltime();
     os << "m, Putere serva: "<< j.getStatistici().getServePower();
@@ -134,7 +134,8 @@ std:: ostream& operator<<(std:: ostream& os, const Jucator& j) {
     os<< ", Acuratete pase: " << j.getStatistici().getSendAcuracy();
     os<< ", Putere Atac: "<< j.getStatistici().getAtackPower();
     os<<", Acuratete blocaj: " << j.getStatistici().getBlockAcuracy();
-    os << ", Punctaj total: " << j.getPunctajTotal()<<std::endl;
+    os<< ", Punctaj total: " << j.getPunctajTotal();
+    os<< ", Stamina: " << j.getStamina();
     return os;
 }
 

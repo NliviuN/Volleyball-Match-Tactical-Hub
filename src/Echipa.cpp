@@ -22,13 +22,13 @@ void Echipa::staminaRotatie() {
 Echipa::Echipa(std::string nume) :
 numeEchipa(std::move(nume)), teren(), asezareRotatie(), esteInAsezareFixa(false),
 libero(), inlocuitDeLibero(), liberoEsteInTeren(false), zonaLibero(-1),
-schimbariEfectuate(0){}
+schimbariEfectuate(0), numarTimeouturi(0){}
 
 void Echipa::adaugaJucator(const Jucator& jucator) {
     lot.push_back(jucator);
 }
 
-bool Echipa::seteazaTitularPeZona(int zona, const std::string& numeJucator) {
+bool Echipa::seteazaTitularPeZona(int zona, const std::string& numeJucator, bool afiseaza) {
     if (!esteZonaValida(zona)) {
         std::cout<< "Eroare zona: alege 1-6!"<< std::endl;
         return false;
@@ -42,20 +42,24 @@ bool Echipa::seteazaTitularPeZona(int zona, const std::string& numeJucator) {
             }
             teren[zona-1] = *it;
             asezareRotatie[zona -1] = *it;
+            if (afiseaza) {
+                std::cout << numeJucator << " a fost asezat in zona " << zona << std::endl;
+            }
             lot.erase(it);
-            std:: cout << numeJucator << " a fost asezat in zona " <<zona << std::endl;
             return true;
         }
     }
     return false;
 }
 
-bool Echipa::seteazaLibero(const std::string &numeJucator) {
+bool Echipa::seteazaLibero(const std::string &numeJucator, bool afiseaza = true) {
     for (auto it = lot.begin(); it != lot.end(); ++it) {
         if (it->getNume() == numeJucator) {
             libero = *it;
+            if (afiseaza) {
+                std:: cout << "\nLibero-ul echipei este " << numeJucator<<std::endl;
+            }
             lot.erase(it);
-            std:: cout << "Libero-ul echipei este " << numeJucator<<std::endl;
             return true;
         }
     }
@@ -100,24 +104,24 @@ void Echipa::jucatoriPePosturiFixe() {
     esteInAsezareFixa = true;
 
     for (int i=1; i<=3; ++i) {
-        if (teren[i].getPost() == PostJucator::MiddleBlocker && i != 2) {
+        if (teren[i].getPost() == PostJucator::Middle_Blocker && i != 2) {
             std::swap(teren[i],teren[2]);
         }
     }
 
     for (int i=1 ;i<=3; ++i) {
-        if (teren[i].getPost() == PostJucator::OutsideHitter && i != 3) {
+        if (teren[i].getPost() == PostJucator::Outside_Hitter && i != 3) {
             std::swap(teren[i],teren[3]);
         }
     }
 
     for (int i : {0, 4, 5}) {
-        if ((teren[i].getPost() == PostJucator::Libero || teren [i].getPost() == PostJucator::MiddleBlocker) && i != 5) {
+        if ((teren[i].getPost() == PostJucator::Libero || teren [i].getPost() == PostJucator::Middle_Blocker) && i != 5) {
             std::swap(teren[i],teren[5]);
         }
     }
     for (int i : {0, 4, 5}) {
-        if (teren[i].getPost() == PostJucator::OutsideHitter && i != 4) {
+        if (teren[i].getPost() == PostJucator::Outside_Hitter && i != 4) {
             std::swap(teren[i],teren[4]);
         }
     }
@@ -193,9 +197,14 @@ void Echipa::scoateLibero() {
 }
 
 void Echipa::timeout() {
-    std::cout << "TIMEOUT" << std::endl;
-    for (auto& j: teren) {
-        j.cresteStamina(10);
+    if (numarTimeouturi < 2) {
+        std::cout<<"Timeout-ul cu numarul " << numarTimeouturi + 1 << std::endl;
+        for (auto& j: teren) {
+            j.cresteStamina(10);
+        }
+        numarTimeouturi ++;
+    } else {
+        std::cout << numeEchipa << " nu mai are timeout-uri!" << std::endl;
     }
 }
 
@@ -210,6 +219,10 @@ Jucator& Echipa::getJucator(int zona) {
     return teren[zona - 1];
 }
 
+void Echipa::setNumarTimeout(int numar) {
+     numarTimeouturi = numar;
+}
+
 int Echipa::getSetter() const {
     for (int i = 0; i < 6; ++i) {
         if (teren[i].getPost() == PostJucator::Setter) {
@@ -222,6 +235,14 @@ int Echipa::getSetter() const {
 const std::vector<Jucator>& Echipa::getLot() const { return lot; }
 
 const std::array<Jucator, 6>& Echipa::getTeren() const { return teren;}
+
+const Jucator &Echipa::getLibero() const {
+    return libero;
+}
+
+const Jucator &Echipa::getTitularZona(int zona) const {
+    return teren[zona - 1];
+}
 
 std::ostream& operator<<(std::ostream& os, const Echipa& e) {
     os << e.getNumeEchipa() << std::endl;

@@ -7,11 +7,11 @@
 
 static std::string numePostText(PostJucator post) {
     switch (post) {
-        case PostJucator::MiddleBlocker: return "Middle Blocker";
+        case PostJucator::Middle_Blocker: return "Middle Blocker";
         case PostJucator::Libero: return "Libero";
         case PostJucator::Opposite: return "Opposite";
         case PostJucator::Setter: return "Setter";
-        case PostJucator::OutsideHitter: return "Outside Hitter";
+        case PostJucator::Outside_Hitter: return "Outside Hitter";
         default: return "Necunoscut";
     }
 }
@@ -49,7 +49,7 @@ void Set::acordaPunct(bool pentruEchipaMea) {
 void Set::pregatesteLiberoInSpate(Echipa &echipa, bool esteLaServiciu) {
     std::vector<int> zonaSpate = esteLaServiciu ? std::vector<int> {6, 5} : std::vector<int>{6, 5, 1};
     for (int z: zonaSpate) {
-        if (echipa.getJucator(z).getPost() == PostJucator::MiddleBlocker) {
+        if (echipa.getJucator(z).getPost() == PostJucator::Middle_Blocker) {
             echipa.introduceLibero(z);
             break;
         }
@@ -65,12 +65,12 @@ std::vector<int> Set::obtineZoneValideAtac(Echipa& echipa, int zonaSetter, int n
         if (post == PostJucator::Libero) continue;
 
         if (nivelPreluare == 1) {
-            if (post == PostJucator::OutsideHitter || post == PostJucator::Opposite) {
+            if (post == PostJucator::Outside_Hitter || post == PostJucator::Opposite) {
                 zoneValide.push_back(z);
             }
 
         } else if (nivelPreluare == 2) {
-            if (post != PostJucator::MiddleBlocker) {
+            if (post != PostJucator::Middle_Blocker) {
                 zoneValide.push_back(z);
             }
         } else {
@@ -97,8 +97,7 @@ void Set::afisareMeniuTactic() {
         std::cout << "1. Joaca urmatorul punct!" << std::endl;
         std::cout << "2. Efectueaza o schimbare!" << std::endl;
         std::cout << "3. Timeout (+10 stamina)"<<std::endl;
-        std::cout << "4. Afiseaza rezervele"<<std::endl;
-        std::cout << "5. Afiseaza informatii despre teren (titulari/stamina)" <<std::endl;
+        std::cout << "4. Afiseaza informatii despre teren (titulari/stamina)" <<std::endl;
         std::cout << "Alege o optiune: ";
         std::cin >> optiune;
 
@@ -114,25 +113,44 @@ void Set::afisareMeniuTactic() {
         }
 
         if (optiune == 2) {
-            int zona;
-            std::string numeRezerva;
-            std::cout << "Introdu numarul zonei(1-6) pentru schimbare: ";
-            std::cin >> zona;
-            std::cout<< "Introdu numele rezervei: ";
-            std::cin.ignore();
-            std::getline(std::cin,numeRezerva);
-            echipaMea.efectueazaSchimbare(zona,numeRezerva);
-        } else if (optiune == 3) {
-            echipaMea.timeout();
-        } else if (optiune == 4) {
             std::cout<< "Banca de rezerve:"<<std::endl;
             for (const auto& j : echipaMea.getLot()) {
                 std::cout<<j<<std::endl;
             }
-        } else if (optiune == 5) {
+            std::cout<<std::endl;
+
             std::cout<< "Titulari"<<std::endl;
             for (int i = 1; i<=6; i++) {
-                std::cout<< "Zona " << i << echipaMea.getJucator(i).getNume() << " (Stamina: " << echipaMea.getJucator(i).getStamina() << ", Post: " << numePostText(echipaMea.getJucator(i).getPost())<< ")" << std::endl;
+                std::cout<< "Zona " << i << ": " << echipaMea.getJucator(i) << std::endl;
+            }
+
+            std::cout<<std::endl;
+
+            int zona;
+            std::cout << "Introdu numarul zonei(1-6) pentru schimbare (sau 0 pentru Inapoi): ";
+            std::cin >> zona;
+            if (zona == 0) {
+                std::cout << "Schimbare anulata. Revenire la meniul tactic.\n";
+                continue; // Se intoarce direct la afisarea meniului tactic!
+            }
+
+            if (zona < 1 || zona > 6) {
+                std::cout << "Zona invalida! Alegeti o zona intre 1 si 6.\n";
+                continue;
+            }
+
+            std::string numeRezerva;
+            std::cout << "Introdu numele rezervei: ";
+            std::cin.ignore();
+            std::getline(std::cin, numeRezerva);
+
+            echipaMea.efectueazaSchimbare(zona, numeRezerva);
+        } else if (optiune == 3) {
+            echipaMea.timeout();
+        }else if (optiune == 4) {
+            std::cout<< "Titulari"<<std::endl;
+            for (int i = 1; i<=6; i++) {
+                std::cout<< "Zona " << i << ": "<< echipaMea.getJucator(i).getNume() << " (Stamina: " << echipaMea.getJucator(i).getStamina() << ", Post: " << numePostText(echipaMea.getJucator(i).getPost())<< ")" << std::endl;
             }
         }
     }while (optiune != 1);
@@ -147,6 +165,7 @@ void Set::simuleazaRaliu() {
 
     if (esteServiciulMeu) {
         int tipServaAles = 2;
+        std::cout << "-------------------------------------";
         std::cout << std::endl << "Serviciu: " << echipaMea.getJucator(1).getNume()<<std::endl;
         std::cout << "Alege tipul de serva: "<< std::endl;
         std::cout << "1. TopSpin (puternica, -10 stamina)" << std::endl;
@@ -159,7 +178,7 @@ void Set::simuleazaRaliu() {
         echipaMea.jucatoriPePosturiFixe();
 
         if (punctajServa <40.0) {
-            std::cout << "Serva gresita! Punct pentru adversari!"<<std::endl;
+            std::cout << ">>> Serva gresita! Punct pentru adversari!"<<std::endl;
             acordaPunct(false);
             return;
         }
@@ -184,7 +203,7 @@ void Set::simuleazaRaliu() {
         echipaAdversa.jucatoriPePosturiFixe();
 
         if (punctajServaAdvers < 40.0) {
-            std::cout << "Adversarul a gresit serva! Punct pentru echipa ta!" << std::endl;
+            std::cout << ">>> Adversarul a gresit serva! Punct pentru echipa ta!" << std::endl;
             acordaPunct(true);
             return;
         }
@@ -197,7 +216,7 @@ void Set::simuleazaRaliu() {
         punctajPreluareCurenta = echipaMea.getJucator(zonaPrimitor).executaPreluare(punctajServaAdvers);
 
         if (punctajPreluareCurenta <= 0.0) {
-            std::cout << "ACE Advers! Punct pentru adversari!"<<std::endl;
+            std::cout << ">>> ACE Advers! Punct pentru adversari!"<<std::endl;
             acordaPunct(false);
             return;
         }
@@ -257,7 +276,7 @@ void Set::simuleazaRaliu() {
                     }
                 }
             }
-            std::cout<<"Sar la blocaj: ";
+            std::cout<<"Sar la blocaj: \n";
             double maxBlock = 0.0;
             double sumaBlock = 0.0;
             for (int z : zoneAleseBlocaj) {
@@ -294,7 +313,7 @@ void Set::simuleazaRaliu() {
                     punctajPreluareCurenta = rezultatDefensiva;
                     echipaMeaAtaca = true;
                 } else {
-                    std::cout << "Preluarea defensiva a esuat! Punct pentru adversari!" << std::endl;
+                    std::cout << ">>> Preluarea defensiva a esuat! Punct pentru adversari!" << std::endl;
                     acordaPunct(false);
                     mingeInJoc = false;
                 }
@@ -368,7 +387,7 @@ void Set::simuleazaRaliu() {
                     punctajPreluareCurenta = rezultatDefensivaBot;
                     echipaMeaAtaca = false;
                 } else {
-                    std::cout << " Apararea adversa cedeaza! Punct castigat de echipa ta!" << std::endl;
+                    std::cout << ">>> Apararea adversa cedeaza! Punct castigat de echipa ta!" << std::endl;
                     acordaPunct(true);
                     mingeInJoc = false;
                 }
@@ -379,8 +398,8 @@ void Set::simuleazaRaliu() {
 
 void Set::joacaSet() {
     std::cout << " Incepe setul: " << echipaMea.getNumeEchipa() << " vs " << echipaAdversa.getNumeEchipa() << std::endl;
-
-    while ((!std::cin.eof() && puncteProprii < 5 && puncteAdversari < 5) || std::abs(puncteProprii - puncteAdversari) < 2) {
+    echipaMea.setNumarTimeout(0);
+    while ((!std::cin.eof() && puncteProprii < 3 && puncteAdversari < 3) || std::abs(puncteProprii - puncteAdversari) < 2) {
         afisareMeniuTactic();
         if (std::cin.eof()) {
             break;

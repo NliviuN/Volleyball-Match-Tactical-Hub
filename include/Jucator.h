@@ -6,9 +6,9 @@
 
 enum class PostJucator {
     Setter,
-    OutsideHitter,
+    Outside_Hitter,
     Opposite,
-    MiddleBlocker,
+    Middle_Blocker,
     Libero
 
 };

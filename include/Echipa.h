@@ -21,6 +21,7 @@ private:
     bool liberoEsteInTeren;
     int zonaLibero;
     int schimbariEfectuate;
+    int numarTimeouturi;
 
     static bool esteZonaValida(int zona);
     static bool esteZonaSpate(int zona);
@@ -28,8 +29,8 @@ private:
 public:
     explicit Echipa(std::string numeEchipa = "Echipa");
     void adaugaJucator(const Jucator& jucator);
-    bool seteazaTitularPeZona(int zona, const std::string& numeJucator);
-    bool seteazaLibero(const std::string& numeJucator);
+    bool seteazaTitularPeZona(int zona, const std::string& numeJucator, bool afiseaza);
+    bool seteazaLibero(const std::string& numeJucator, bool afiseaza);
     bool efectueazaSchimbare(int zonaTeren, const std::string& numeRezerva);
     void jucatoriPePosturiFixe();
     void revinoLaAsezareaInitiala();
@@ -40,8 +41,11 @@ public:
     const std::string& getNumeEchipa() const;
     Jucator& getJucator(int zona);
     int getSetter() const;
+    void setNumarTimeout(int numar);
     const std::vector<Jucator>& getLot() const;
     const std::array<Jucator, 6>& getTeren() const;
+    const Jucator& getTitularZona(int zona) const;
+    const Jucator& getLibero() const;
     friend std::ostream& operator<<(std::ostream& os, const Echipa& e);
 
 };

@@ -15,12 +15,6 @@ void Meci::inregistreazaSet(const Set &setNou, bool castigatDeGazda) {
     } else {
         std::cout << std::endl << "Setul " << seturiJucate.size() << " s-a incheiat!" << std::endl;
     }
-
-    std::cout << "Doresti sa afisezi raportul statistic al meciului? (1 - Da / 0 - Nu): ";
-    int optiune = 0;
-    if (std::cin >> optiune && optiune == 1) {
-        std::cout <<std::endl << genereazaRaportDetaliat() << "\n";
-    }
 }
 
 bool Meci::esteMeciulTerminat() const {
@@ -48,6 +42,7 @@ std::string Meci::determinaStareMeci() const {
 }
 
 std::string Meci::genereazaRaportDetaliat() const {
+    std::cout <<"-----------------------------------\n";
     std::string raport = "Raport Statistic Meci\n" ;
     int totalSeturi = seturiCastigateGazda + seturiCastigateOaspete;
     raport += "Total seturi disputate: " + std::to_string(totalSeturi) + "\n";
@@ -82,35 +77,7 @@ std::string Meci::genereazaRaportDetaliat() const {
             raport += "Avantaj de doua seturi.\n";
         }
     }
-
-    int pctGazda = calculeazaPuncteClasament(true);
-    int pctOaspete = calculeazaPuncteClasament(false);
-    raport += "Puncte clasament (sistem FIVB): Gazda " + std::to_string(pctGazda) +
-              " pct | Oaspete " + std::to_string(pctOaspete) + " pct\n";
-
     return raport;
-}
-
-int Meci::calculeazaPuncteClasament(bool pentruGazda) const {
-    if (!esteMeciulTerminat()) {
-        return 0;
-    }
-
-    int seturiProprii = pentruGazda ? seturiCastigateGazda : seturiCastigateOaspete;
-    int seturiAdversar = pentruGazda ? seturiCastigateOaspete : seturiCastigateGazda;
-
-    if (seturiProprii == 3) {
-        if (seturiAdversar <= 1) {
-            return 3;
-        }
-        return 2;
-    }
-
-    if (seturiProprii == 2 && seturiAdversar == 3) {
-        return 1;
-    }
-
-    return 0;
 }
 
 void Meci::reseteazaMeci() {
@@ -124,8 +91,10 @@ void Meci::meniuRaportStatistic() const {
     int optiune = 0;
     if (std::cin >> optiune && optiune == 1) {
         std::cout << std::endl << genereazaRaportDetaliat() << std::endl;
+        return;
     } else {
         std::cout << "Continuam fara afisarea raportului." << std::endl;
+        return;
     }
 }
 
