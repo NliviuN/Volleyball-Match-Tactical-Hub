@@ -6,7 +6,7 @@
 #include "Echipa.h"
 #include "Set.h"
 // cppcheck-suppress missingInclude
-#include  <nlohmann/json.hpp>
+#include  <nlohmann/json.hpp> // v3.12.0
 #include "Meci.h"
 
 struct EchipaSalvata {
