@@ -40,7 +40,7 @@ void Set::acordaPunct(bool pentruEchipaMea) {
         puncteAdversari++;
         if (esteServiciulMeu) {
             std::cout << echipaAdversa.getNumeEchipa()<< " castiga serviciul si face rotatie!"<< std::endl;
-            echipaMea.roteste();
+            echipaAdversa.roteste();
             esteServiciulMeu = false;
         }
     }
@@ -115,20 +115,29 @@ void Set::afisareMeniuTactic() {
         if (optiune == 2) {
             std::cout<< "Banca de rezerve:"<<std::endl;
             for (const auto& j : echipaMea.getLot()) {
-                std::cout<<j<<std::endl;
+                std::cout << j << " | Stamina: " << j.getStamina() << std::endl;
             }
             std::cout<<std::endl;
 
             std::cout<< "Titulari"<<std::endl;
             for (int i = 1; i<=6; i++) {
-                std::cout<< "Zona " << i << ": " << echipaMea.getJucator(i) << std::endl;
+                std::cout<< "Zona " << i << ": " << echipaMea.getJucator(i) << " | Stamina: " << echipaMea.getJucator(i).getStamina() << std::endl;
             }
 
             std::cout<<std::endl;
 
-            int zona;
+            int zona = 0;
             std::cout << "Introdu numarul zonei(1-6) pentru schimbare (sau 0 pentru Inapoi): ";
-            std::cin >> zona;
+            if (!(std::cin >> zona)) {
+                if (std::cin.eof()) {
+                    return;
+                }
+                std::cin.clear();
+                std::cin.ignore(10000, '\n');
+                std::cout << "Input invalid! Introdu o cifra.\n";
+                continue;
+            }
+
             if (zona == 0) {
                 std::cout << "Schimbare anulata. Revenire la meniul tactic.\n";
                 continue; // Se intoarce direct la afisarea meniului tactic!
@@ -156,6 +165,59 @@ void Set::afisareMeniuTactic() {
     }while (optiune != 1);
 }
 
+ void Set::inlocuiesteJucatorAccidentat(Echipa& echipa, int zonaAtac) {
+    const Jucator& accidentatOriginal = echipa.getJucator(zonaAtac);
+    if (!accidentatOriginal.esteIndisponibil()) {
+        return;
+    }
+
+    std::cout << ">>> [ACCIDENTARE] " << accidentatOriginal.getNume()
+              << " (Zona " << zonaAtac << ") s-a accidentat la aterizare si nu mai poate continua!\n";
+
+    PostJucator postCautat = accidentatOriginal.getPost();
+    std::string numeInlocuitor;
+
+    for (const auto& r : echipa.getLot()) {
+        if (!r.esteIndisponibil() && r.getPost() == postCautat) {
+            numeInlocuitor = r.getNume();
+            break;
+        }
+    }
+
+    if (numeInlocuitor.empty()) {
+        for (const auto& r : echipa.getLot()) {
+            if (!r.esteIndisponibil() && r.getPost() != PostJucator::Libero) {
+                numeInlocuitor = r.getNume();
+                break;
+            }
+        }
+    }
+
+    if (numeInlocuitor.empty()) {
+        std::cout << ">>> Nu mai exista rezerve disponibile pe banca pentru schimbare!\n";
+        return;
+    }
+
+    echipa.revinoLaAsezareaInitiala();
+
+    int zonaCorectaSchimbare = -1;
+    for (int z = 1; z <= 6; ++z) {
+        if (echipa.getJucator(z).esteIndisponibil()) {
+            zonaCorectaSchimbare = z;
+            break;
+        }
+    }
+
+    if (zonaCorectaSchimbare != -1) {
+        std::cout << ">>> Schimbare medicala de urgenta: intra " << numeInlocuitor
+                  << " in locul lui " << echipa.getJucator(zonaCorectaSchimbare).getNume()
+                  << " (zona initiala " << zonaCorectaSchimbare << ")!\n";
+        echipa.efectueazaSchimbare(zonaCorectaSchimbare, numeInlocuitor);
+    }
+
+    echipa.jucatoriPePosturiFixe();
+}
+
 void Set::simuleazaRaliu() {
     pregatesteLiberoInSpate(echipaMea, esteServiciulMeu);
     pregatesteLiberoInSpate(echipaAdversa, !esteServiciulMeu);
@@ -164,21 +226,36 @@ void Set::simuleazaRaliu() {
     bool echipaMeaAtaca = false;
 
     if (esteServiciulMeu) {
-        int tipServaAles = 2;
+        int tipServaAles = 0;
         std::cout << "-------------------------------------";
         std::cout << std::endl << "Serviciu: " << echipaMea.getJucator(1).getNume()<<std::endl;
         std::cout << "Alege tipul de serva: "<< std::endl;
         std::cout << "1. TopSpin (puternica, -10 stamina)" << std::endl;
         std::cout << "2. Float (tactica, -5 stamina)" << std::endl;
-        std::cout << "Optiune (1 sau 2): ";
-        std::cin >> tipServaAles;
+
+        while (tipServaAles != 1 && tipServaAles != 2) {
+            std::cout << "Optiune (1 sau 2): ";
+            if (!(std::cin >> tipServaAles)) {
+                if (std::cin.eof()) {
+                    return;
+                }
+                std::cin.clear();
+                std::cin.ignore(10000, '\n');
+                std::cout << "Optiune invalida! Introdu 1 sau 2.\n";
+                tipServaAles = 0;
+                continue;
+            }
+            if (tipServaAles != 1 && tipServaAles != 2) {
+                std::cout << "Alege 1 (TopSpin) sau 2 (Float)!\n";
+            }
+        }
 
         TipServa servaAleasa = (tipServaAles == 1) ? TipServa::TopSpin : TipServa::Float;
         double punctajServa = echipaMea.getJucator(1).executaServa(servaAleasa);
         echipaMea.jucatoriPePosturiFixe();
 
-        if (punctajServa <40.0) {
-            std::cout << ">>> Serva gresita! Punct pentru adversari!"<<std::endl;
+        if (punctajServa < 40.0) {
+            std::cout << ">>> Serva gresita! Punct pentru adversari!" << std::endl;
             acordaPunct(false);
             return;
         }
@@ -244,13 +321,27 @@ void Set::simuleazaRaliu() {
             std::cout << "Setter-ul " << echipaAdversa.getJucator(zonaSetterAdvers).getNume()
                           << " ridica pentru atacul lui " << echipaAdversa.getJucator(zonaAtacAdvers).getNume()
                           << " (Zona " << zonaAtacAdvers << ")!" << std::endl;
+            inlocuiesteJucatorAccidentat(echipaAdversa, zonaAtacAdvers);
 
             int catiBlocheaza = 0;
-            std::cout << "Cati jucatori vrei sa sara la blocaj? (1, 2 sau 3): ";
-            std::cin >> catiBlocheaza;
             while (catiBlocheaza < 1 || catiBlocheaza > 3) {
-                std::cout << "Alege un numar valid intre 1 si 3: ";
-                std::cin >> catiBlocheaza;
+                std::cout << "Cati jucatori trimiti la blocaj (1, 2 sau 3)? ";
+
+                if (!(std::cin >> catiBlocheaza)) {
+                    if (std::cin.eof()) {
+                        catiBlocheaza = 1;
+                        break;
+                    }
+                    std::cin.clear();
+                    std::cin.ignore(10000, '\n');
+                    std::cout << "Input invalid! Introdu o cifra intre 1 si 3.\n";
+                    catiBlocheaza = 0;
+                    continue;
+                }
+
+                if (catiBlocheaza < 1 || catiBlocheaza > 3) {
+                    std::cout << "Alege un numar valid intre 1 si 3!\n";
+                }
             }
             std::vector<int> zoneAleseBlocaj;
             if (catiBlocheaza == 3) {
@@ -261,7 +352,15 @@ void Set::simuleazaRaliu() {
                     bool zonaValida = false;
                     while (!zonaValida) {
                         std::cout << "Alege zona jucatorului #" << i << " care sare la block (2, 3 sau 4): ";
-                        std::cin >> zonaBlocant;
+                        if (!(std::cin >> zonaBlocant)) {
+                            if (std::cin.eof()) {
+                                return;
+                            }
+                            std::cin.clear();
+                            std::cin.ignore(10000, '\n');
+                            std::cout << "Input invalid! Introdu o cifra.\n";
+                            continue;
+                        }
 
                         if (zonaBlocant < 2 || zonaBlocant > 4) {
                             std::cout << "Doar jucatorii din prima linie (zonele 2, 3 sau 4) pot bloca!\n";
@@ -333,7 +432,18 @@ void Set::simuleazaRaliu() {
             bool alegereCorecta = false;
             while (!alegereCorecta) {
                 std::cout << "Introdu zona atacantului dorit: ";
-                std::cin >> zonaAtacAleasa;
+                if (!(std::cin >> zonaAtacAleasa)) {
+                    if (std::cin.eof()) {
+                        if (!zoneValideAtac.empty()) {
+                            zonaAtacAleasa = zoneValideAtac.front();
+                        }
+                        break;
+                    }
+                    std::cin.clear();
+                    std::cin.ignore(10000, '\n');
+                    std::cout << "Input invalid!\n";
+                    continue;
+                }
                 if (std::ranges::find(zoneValideAtac, zonaAtacAleasa) != zoneValideAtac.end()) {
                     alegereCorecta = true;
                 } else {
@@ -342,6 +452,7 @@ void Set::simuleazaRaliu() {
             }
             double punctajAtacMeu = echipaMea.getJucator(zonaAtacAleasa).executaAtac(punctajPasaMea);
             std::cout << echipaMea.getJucator(zonaAtacAleasa).getNume() << " ataca din zona " << zonaAtacAleasa << "!" << std::endl;
+            inlocuiesteJucatorAccidentat(echipaMea, zonaAtacAleasa);
             int catiBlocheazaBot = 2;
             if (nivelPreluare == 1) {
                 catiBlocheazaBot = (std::rand() % 2) + 2;
@@ -399,8 +510,7 @@ void Set::simuleazaRaliu() {
 void Set::joacaSet() {
     std::cout << " Incepe setul: " << echipaMea.getNumeEchipa() << " vs " << echipaAdversa.getNumeEchipa() << std::endl;
     echipaMea.setNumarTimeout(0);
-    while ((!std::cin.eof() && puncteProprii < 3 && puncteAdversari < 3) || std::abs(puncteProprii - puncteAdversari) < 2) {
-        afisareMeniuTactic();
+    while (!std::cin.eof() && ((puncteProprii < 15 && puncteAdversari < 15) || std::abs(puncteProprii - puncteAdversari) < 2)) {        afisareMeniuTactic();
         if (std::cin.eof()) {
             break;
         }
@@ -411,7 +521,8 @@ void Set::joacaSet() {
             break;
         }
     }
-
+    echipaMea.scoateLibero();
+    echipaAdversa.scoateLibero();
     if (AmCastigat()) {
         std::cout << " SET CASTIGAT DE " << echipaMea.getNumeEchipa() << " (" << puncteProprii << " - " << puncteAdversari << ")!" << std::endl;
     } else {

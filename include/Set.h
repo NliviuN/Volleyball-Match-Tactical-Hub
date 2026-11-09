@@ -12,6 +12,7 @@ private:
     bool esteServiciulMeu;
 
     void afisareMeniuTactic();
+    static void inlocuiesteJucatorAccidentat(Echipa& echipa, int zona);
     void simuleazaRaliu();
     void acordaPunct(bool pentruEchipaMea);
     static void pregatesteLiberoInSpate(Echipa& echipa, bool esteLaServiciu);

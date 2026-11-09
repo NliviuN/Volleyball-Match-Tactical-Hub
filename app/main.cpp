@@ -77,7 +77,7 @@ static std::vector<Jucator> citesteJucatoriDinFisier(const std::string& numeFisi
 }
 
 
-static int afiseazaJucatoriDupaPost(const std::vector<Jucator> &listaJucatori, const PostJucator post) {
+static int afiseazaJucatoriDupaPost(const std::vector<Jucator> &listaJucatori, const PostJucator post, int bugetDisponibil = 10000) {
     std::string postStr;
     if (post == PostJucator::Libero) postStr = "Libero";
     else if (post == PostJucator::Middle_Blocker) postStr = "Middle Blocker";
@@ -86,149 +86,212 @@ static int afiseazaJucatoriDupaPost(const std::vector<Jucator> &listaJucatori, c
     else if (post == PostJucator::Setter) postStr = "Setter";
 
     int contor = 1;
-    std:: cout << "\n *** Lista " << postStr << "s *** \n";
+    std::cout << "\n *** Lista " << postStr << "s";
+    if (bugetDisponibil < 10000) {
+        std::cout << " (Buget disponibil: " << bugetDisponibil << ") *** \n";
+    } else { std::cout << " *** \n"; }
     for(const Jucator& j: listaJucatori) {
-        if (j.getPost() == post) {
+        if (j.getPost() == post && j.getPunctajTotal() <= bugetDisponibil) {
             std::cout << contor << ". " << j << std::endl;
             contor++;
         }
     }
-    std:: cout << "----------------------------------------------------------------\n";
-    return contor-1;
+    std::cout << "----------------------------------------------------------------\n";
+    return contor - 1;
 }
 
-static Jucator gasesteInListaDupaNumarSiPost(const std::vector<Jucator> &listaJucatori, PostJucator post, int numar) {
+static Jucator gasesteInListaDupaNumarSiPost(const std::vector<Jucator> &listaJucatori, PostJucator post, int numar, int bugetDisponibil = 10000) {
     int contor = 1;
     for (const Jucator& j: listaJucatori) {
-        if (j.getPost() == post && contor == numar) {
-            return j;
-        } else if (j.getPost() == post && contor < numar) {
-          contor++;
+        if (j.getPost() == post && j.getPunctajTotal() <= bugetDisponibil) {
+            if (contor == numar) {
+                return j;
+            }
+            contor++;
         }
     }
     return listaJucatori.front();
 }
 
-static bool alegeJucator(int &numar, int numarPost, const std::vector<int> & jucatoriAlesi) {
-    std::cin >> numar;
-    if (std::cin.fail()) {
+static bool alegeJucator(int &numar, int numarPost, const std::vector<int> &jucatoriAlesi) {
+    if (!(std::cin >> numar)) {
+        if (std::cin.eof()) {
+            return false;
+        }
         std::cin.clear();
         std::cin.ignore(10000, '\n');
-        std::cout<<"Introdu un numar valid!\n"<<std::endl;
+        std::cout << "Introdu un numar valid!\n" << std::endl;
         return false;
     }
 
     if (numar < 1 || numar > numarPost) {
-        std::cout << "Introdu un numar de la 1 la " << numarPost <<"!" << std::endl;
+        std::cout << "Numarul nu se afla in lista! Alege intre 1 si " << numarPost << ".\n";
         return false;
     }
 
-
-    for (int i : jucatoriAlesi) {
-        if (i == numar) {
-            std::cout << "Acest jucator a fost ales! Alege altul!\n"<<std::endl;
-            return false;
-        }
+    if (std::ranges::find(jucatoriAlesi, numar) != jucatoriAlesi.end()) {
+        std::cout << "Acest jucator a fost deja ales!\n";
+        return false;
     }
 
     return true;
-
 }
 
-static Echipa creeazaEchipa(const std::string& nume, const std::vector<Jucator> &listaJucatori) {
+static Echipa creeazaEchipa(const std::string& nume, std::vector<Jucator>& listaJucatori) {
     Echipa echipa(nume);
-    int middleBlocker = 0, outsideHitter = 0, libero = 0, setter = 0, opposite = 0;
 
-    std::cout << "----------------" << std::endl;
-    std::cout <<"Alege jucatori: "  << std::endl;
-    std::cout << "----------------"<< std::endl;
+    int bugetMiddle = 1765;
+    int bugetOutside = 1835;
+    int bugetLibero = 500;
+    int bugetOpposite = 1175;
+    int bugetSetter = 595;
 
-    int numarMiddle = afiseazaJucatoriDupaPost(listaJucatori, PostJucator::Middle_Blocker);
-    int numar;
-    std::vector<int> jucatoriAlesi;
-    while (middleBlocker < 3) {
-        if (middleBlocker == 0) {
-            std::cout << "Alege primul Middle Blocker pentru echipa ta dupa numarul din lista: ";
-        } else if (middleBlocker == 1) {
-            std::cout << "Alege al doilea Middle Blocker pentru echipa ta dupa numarul din lista: ";
-        } else if (middleBlocker == 2) {
-            std::cout << "Alege ultimul Middle Blocker pentru echipa ta dupa numarul din lista: ";
+    int middleBlocker = 0, outsideHitter = 0, libero = 0, opposite = 0, setter = 0;
+    int numar = 0;
+
+    std::cout << "----------------------------------------\n";
+    std::cout << "Alege jucatori (Sistem Bugetar & Strategie): " << std::endl;
+    std::cout << "----------------------------------------\n";
+
+    while (middleBlocker < 3 && !std::cin.eof()) {
+        int maxAcum = bugetMiddle - (2 - middleBlocker) * 575;
+
+        int numarMiddle = afiseazaJucatoriDupaPost(listaJucatori, PostJucator::Middle_Blocker, maxAcum);
+        if (numarMiddle == 0) {
+            std::cout << "Nu mai ai jucatori in acest buget!\n";
+            break;
         }
-        if (alegeJucator(numar, numarMiddle, jucatoriAlesi)) {
-            Jucator jucator = gasesteInListaDupaNumarSiPost(listaJucatori, PostJucator::Middle_Blocker, numar);
-            jucatoriAlesi.push_back(numar);
+
+        std::cout << "\n[Buget MB curent: " << bugetMiddle << " | Plafon selectie: " << maxAcum << "]\n";
+        std::cout << "Alege un Middle Blocker dupa numarul din lista: ";
+
+        std::vector<int> dummy;
+        if (alegeJucator(numar, numarMiddle, dummy)) {
+            Jucator jucator = gasesteInListaDupaNumarSiPost(listaJucatori, PostJucator::Middle_Blocker, numar, maxAcum);
+
+            bugetMiddle -= static_cast<int>(jucator.getPunctajTotal());
             echipa.adaugaJucator(jucator);
+
+            std::erase_if(listaJucatori, [&jucator](const Jucator& j) {
+                return j.getNume() == jucator.getNume();
+            });
             middleBlocker++;
         }
     }
+    if (std::cin.eof()) return echipa;
 
-    jucatoriAlesi.clear();
-    int numarOutside = afiseazaJucatoriDupaPost(listaJucatori, PostJucator::Outside_Hitter);
+    bugetOutside += bugetMiddle;
 
-    while (outsideHitter < 3) {
-        if (outsideHitter == 0) {
-            std::cout << "Alege primul Outside Hitter pentru echipa ta dupa numarul din lista: ";
-        } else if (outsideHitter == 1) {
-            std::cout << "Alege al doilea Outside Hitter pentru echipa ta dupa numarul din lista: ";
-        } else if (outsideHitter == 2) {
-            std::cout << "Alege ultimul Outside Hitter pentru echipa ta dupa numarul din lista: ";
+    while (outsideHitter < 3 && !std::cin.eof()) {
+        int maxAcum = bugetOutside - (2 - outsideHitter) * 596;
+
+        int numarOutside = afiseazaJucatoriDupaPost(listaJucatori, PostJucator::Outside_Hitter, maxAcum);
+        if (numarOutside == 0) {
+            std::cout << "Nu mai ai jucatori in acest buget!\n";
+            break;
         }
-        if (alegeJucator(numar, numarOutside, jucatoriAlesi)) {
-            Jucator jucator = gasesteInListaDupaNumarSiPost(listaJucatori, PostJucator::Outside_Hitter, numar);
-            jucatoriAlesi.push_back(numar);
+
+        std::cout << "\n[Buget OH curent: " << bugetOutside << " | Plafon selectie: " << maxAcum << "]\n";
+        std::cout << "Alege un Outside Hitter dupa numarul din lista: ";
+
+        std::vector<int> dummy;
+        if (alegeJucator(numar, numarOutside, dummy)) {
+            Jucator jucator = gasesteInListaDupaNumarSiPost(listaJucatori, PostJucator::Outside_Hitter, numar, maxAcum);
+
+            bugetOutside -= static_cast<int>(jucator.getPunctajTotal());
             echipa.adaugaJucator(jucator);
+
+            std::erase_if(listaJucatori, [&jucator](const Jucator& j) {
+                return j.getNume() == jucator.getNume();
+            });
             outsideHitter++;
         }
     }
+    if (std::cin.eof()) return echipa;
 
-    jucatoriAlesi.clear();
-    int numarLibero = afiseazaJucatoriDupaPost(listaJucatori, PostJucator::Libero);
+    bugetLibero += bugetOutside;
 
-    while (libero < 1) {
-        if (libero == 0) {
-            std::cout << "Alege Libero-ul pentru echipa ta dupa numarul din lista: ";
+    while (libero < 1 && !std::cin.eof()) {
+        int numarLibero = afiseazaJucatoriDupaPost(listaJucatori, PostJucator::Libero, bugetLibero);
+        if (numarLibero == 0) {
+            std::cout << "Nu mai ai jucatori in acest buget!\n";
+            break;
         }
-        if (alegeJucator(numar, numarLibero, jucatoriAlesi)) {
-            Jucator jucator = gasesteInListaDupaNumarSiPost(listaJucatori, PostJucator::Libero, numar);
-            jucatoriAlesi.push_back(numar);
+
+        std::cout << "\n[Buget Libero disponibil: " << bugetLibero << "]\n";
+        std::cout << "Alege Libero-ul dupa numarul din lista: ";
+
+        std::vector<int> dummy;
+        if (alegeJucator(numar, numarLibero, dummy)) {
+            Jucator jucator = gasesteInListaDupaNumarSiPost(listaJucatori, PostJucator::Libero, numar, bugetLibero);
+
+            bugetLibero -= static_cast<int>(jucator.getPunctajTotal());
             echipa.adaugaJucator(jucator);
+
+            std::erase_if(listaJucatori, [&jucator](const Jucator& j) {
+                return j.getNume() == jucator.getNume();
+            });
             libero++;
         }
     }
+    if (std::cin.eof()) return echipa;
 
-    jucatoriAlesi.clear();
-    int numarOpposite = afiseazaJucatoriDupaPost(listaJucatori, PostJucator::Opposite);
+    bugetOpposite += bugetLibero;
 
-    while (opposite < 2) {
-        if (opposite == 0) {
-            std::cout << "Alege primul Opposite pentru echipa ta dupa numarul din lista: ";
-        } else if (opposite == 1) {
-            std::cout << "Alege al doilea Opposite pentru echipa ta dupa numarul din lista: ";
+    while (opposite < 2 && !std::cin.eof()) {
+        int maxAcum = bugetOpposite - (1 - opposite) * 582;
+
+        int numarOpposite = afiseazaJucatoriDupaPost(listaJucatori, PostJucator::Opposite, maxAcum);
+        if (numarOpposite == 0) {
+            std::cout << "Nu mai ai jucatori in acest buget!\n";
+            break;
         }
-        if (alegeJucator(numar, numarOpposite, jucatoriAlesi)) {
-            Jucator jucator = gasesteInListaDupaNumarSiPost(listaJucatori, PostJucator::Opposite, numar);
-            jucatoriAlesi.push_back(numar);
+
+        std::cout << "\n[Buget Opposite curent: " << bugetOpposite << " | Plafon selectie: " << maxAcum << "]\n";
+        std::cout << "Alege un Opposite dupa numarul din lista: ";
+
+        std::vector<int> dummy;
+        if (alegeJucator(numar, numarOpposite, dummy)) {
+            Jucator jucator = gasesteInListaDupaNumarSiPost(listaJucatori, PostJucator::Opposite, numar, maxAcum);
+
+            bugetOpposite -= static_cast<int>(jucator.getPunctajTotal());
             echipa.adaugaJucator(jucator);
+
+            std::erase_if(listaJucatori, [&jucator](const Jucator& j) {
+                return j.getNume() == jucator.getNume();
+            });
             opposite++;
         }
     }
+    if (std::cin.eof()) return echipa;
 
-    jucatoriAlesi.clear();
-    int numarSetter = afiseazaJucatoriDupaPost(listaJucatori, PostJucator::Setter);
+    bugetSetter += bugetOpposite;
 
-    while (setter < 2) {
-        if (setter == 0) {
-            std::cout << "Alege primul Setter pentru echipa ta dupa numarul din lista: ";
-        } else if (setter == 1) {
-            std::cout << "Alege al doilea Setter pentru echipa ta dupa numarul din lista: ";
+    // --- 5. SETTER (1 jucător) ---
+    while (setter < 1 && !std::cin.eof()) {
+        int numarSetter = afiseazaJucatoriDupaPost(listaJucatori, PostJucator::Setter, bugetSetter);
+        if (numarSetter == 0) {
+            std::cout << "Nu mai ai jucatori in acest buget!\n";
+            break;
         }
-        if (alegeJucator(numar, numarSetter, jucatoriAlesi)) {
-            Jucator jucator = gasesteInListaDupaNumarSiPost(listaJucatori, PostJucator::Setter, numar);
-            jucatoriAlesi.push_back(numar);
+
+        std::cout << "\n[Buget Setter disponibil: " << bugetSetter << "]\n";
+        std::cout << "Alege Setter-ul dupa numarul din lista: ";
+
+        std::vector<int> dummy;
+        if (alegeJucator(numar, numarSetter, dummy)) {
+            Jucator jucator = gasesteInListaDupaNumarSiPost(listaJucatori, PostJucator::Setter, numar, bugetSetter);
+
+            bugetSetter -= static_cast<int>(jucator.getPunctajTotal());
             echipa.adaugaJucator(jucator);
+
+            std::erase_if(listaJucatori, [&jucator](const Jucator& j) {
+                return j.getNume() == jucator.getNume();
+            });
             setter++;
         }
     }
+
     return echipa;
 }
 
@@ -281,6 +344,8 @@ static Echipa creeazaEchipaAutomata(const std::string& nume, std::vector<Jucator
 
 
 static void configureazaTeren(Echipa& echipa) {
+    if (std::cin.eof()) return;
+
     std::cout << "-----------------------" << std::endl;
     std::cout << "CONFIGURARE TITULARI: " << echipa.getNumeEchipa() << std::endl;
 
@@ -301,7 +366,7 @@ static void configureazaTeren(Echipa& echipa) {
     int numarMiddleBlockeri = afiseazaJucatoriDupaPost(lotInitial, PostJucator::Middle_Blocker);
     const int zoneMiddle[2] = {3, 6};
     for (int zona : zoneMiddle) {
-        while (true) {
+        while (!std::cin.eof()) {
             std::cout << "\nSeteaza in pozitia " << zona << ": ";
             if (alegeJucator(numar, numarMiddleBlockeri, jucatoriAlesi)) {
                 Jucator j = gasesteInListaDupaNumarSiPost(lotInitial, PostJucator::Middle_Blocker, numar);
@@ -311,6 +376,7 @@ static void configureazaTeren(Echipa& echipa) {
                 }
             }
         }
+        if (std::cin.eof()) return;
     }
 
     jucatoriAlesi.clear();
@@ -319,23 +385,24 @@ static void configureazaTeren(Echipa& echipa) {
     int numarOutsideHitteri = afiseazaJucatoriDupaPost(lotInitial, PostJucator::Outside_Hitter);
     const int zoneOutside[2] = {1, 4};
     for (int zona : zoneOutside) {
-        while (true) {
+        while (!std::cin.eof()) {
             std::cout << "\nSeteaza in pozitia " << zona << ": ";
             if (alegeJucator(numar, numarOutsideHitteri, jucatoriAlesi)) {
                 Jucator j = gasesteInListaDupaNumarSiPost(lotInitial, PostJucator::Outside_Hitter, numar);
-                if (echipa.seteazaTitularPeZona(zona, j.getNume(),true)) {
+                if (echipa.seteazaTitularPeZona(zona, j.getNume(), true)) {
                     jucatoriAlesi.push_back(numar);
                     break;
                 }
             }
         }
+        if (std::cin.eof()) return;
     }
 
     jucatoriAlesi.clear();
     std::cout << "-------------------------------------\n";
     std::cout << "Seteaza Setterul in teren\n";
     int numarSetteri = afiseazaJucatoriDupaPost(lotInitial, PostJucator::Setter);
-    while (true) {
+    while (!std::cin.eof()) {
         std::cout << "\nSeteaza in pozitia 2: ";
         if (alegeJucator(numar, numarSetteri, jucatoriAlesi)) {
             Jucator j = gasesteInListaDupaNumarSiPost(lotInitial, PostJucator::Setter, numar);
@@ -345,12 +412,13 @@ static void configureazaTeren(Echipa& echipa) {
             }
         }
     }
+    if (std::cin.eof()) return;
 
     jucatoriAlesi.clear();
     std::cout << "-------------------------------------\n";
     std::cout << "Seteaza Opposite-ul in teren\n";
     int numarOpposite = afiseazaJucatoriDupaPost(lotInitial, PostJucator::Opposite);
-    while (true) {
+    while (!std::cin.eof()) {
         std::cout << "\nSeteaza in pozitia 5: ";
         if (alegeJucator(numar, numarOpposite, jucatoriAlesi)) {
             Jucator j = gasesteInListaDupaNumarSiPost(lotInitial, PostJucator::Opposite, numar);
@@ -360,6 +428,7 @@ static void configureazaTeren(Echipa& echipa) {
             }
         }
     }
+    if (std::cin.eof()) return;
 
     std::cout << "\nEchipa de start a fost asezata pe teren!" << std::endl;
 }
@@ -462,12 +531,17 @@ static std::vector<EchipaSalvata> incarcaEchipeDinFisier(const std::string& nume
     return echipeIncarcate;
 }
 
-static void joacaMeciComplet(const Echipa &echipa1, const Echipa &echipa2) {
+static void joacaMeciComplet(Echipa &echipa1, Echipa &echipa2) {
     Meci meci(echipa1, echipa2);
 
-    while (!meci.esteMeciulTerminat()) {
+    while (!meci.esteMeciulTerminat() && !std::cin.eof()) {
         Set setCurent(echipa1, echipa2);
         setCurent.joacaSet();
+        if (std::cin.eof()) {
+            break;
+        }
+        echipa1 = setCurent.getEchipaMea();
+        echipa2 = setCurent.getEchipaAdversa();
         meci.inregistreazaSet(setCurent, setCurent.AmCastigat());
         std::cout << meci.determinaStareMeci() << std::endl;
         meci.afiseazaScorul();

@@ -30,7 +30,7 @@ public:
     explicit Echipa(std::string numeEchipa = "Echipa");
     void adaugaJucator(const Jucator& jucator);
     bool seteazaTitularPeZona(int zona, const std::string& numeJucator, bool afiseaza);
-    bool seteazaLibero(const std::string& numeJucator, bool afiseaza);
+    bool seteazaLibero(const std::string& numeJucator, bool afiseaza = true);
     bool efectueazaSchimbare(int zonaTeren, const std::string& numeRezerva);
     void jucatoriPePosturiFixe();
     void revinoLaAsezareaInitiala();

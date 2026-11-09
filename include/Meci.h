@@ -28,7 +28,6 @@ public:
     void afiseazaScorul() const;
 
     std::string genereazaRaportDetaliat() const;
-    int calculeazaPuncteClasament(bool pentruGazda) const;
     void reseteazaMeci();
     void meniuRaportStatistic() const;
 

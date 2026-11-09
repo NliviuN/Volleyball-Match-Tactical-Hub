@@ -52,7 +52,7 @@ bool Echipa::seteazaTitularPeZona(int zona, const std::string& numeJucator, bool
     return false;
 }
 
-bool Echipa::seteazaLibero(const std::string &numeJucator, bool afiseaza = true) {
+bool Echipa::seteazaLibero(const std::string &numeJucator, bool afiseaza) {
     for (auto it = lot.begin(); it != lot.end(); ++it) {
         if (it->getNume() == numeJucator) {
             libero = *it;

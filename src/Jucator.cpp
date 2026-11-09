@@ -106,10 +106,6 @@ Jucator& Jucator::operator=(const Jucator& j) {
     return *this;
 }
 
-const StatisticiJucator& Jucator::getStatistici() const {
-    return statistici;
-};
-
 PostJucator Jucator::getPost() const {
     return post;
 }
@@ -128,14 +124,7 @@ std:: ostream& operator<<(std:: ostream& os, const Jucator& j) {
         case PostJucator::Setter: os << "Setter"; break;
         case PostJucator::Outside_Hitter: os << "Outside Hitter"; break;
     }
-    os << ", Inaltime: "<< j.getStatistici().getInaltime();
-    os << "m, Putere serva: "<< j.getStatistici().getServePower();
-    os<< ", Acuratete preluare: "<<j.getStatistici().getReceiveAcuracy();
-    os<< ", Acuratete pase: " << j.getStatistici().getSendAcuracy();
-    os<< ", Putere Atac: "<< j.getStatistici().getAtackPower();
-    os<<", Acuratete blocaj: " << j.getStatistici().getBlockAcuracy();
-    os<< ", Punctaj total: " << j.getPunctajTotal();
-    os<< ", Stamina: " << j.getStamina();
+    os << ", " << j.statistici;
     return os;
 }
 

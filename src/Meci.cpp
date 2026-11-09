@@ -42,8 +42,8 @@ std::string Meci::determinaStareMeci() const {
 }
 
 std::string Meci::genereazaRaportDetaliat() const {
-    std::cout <<"-----------------------------------\n";
-    std::string raport = "Raport Statistic Meci\n" ;
+    std::cout << "-----------------------------------\n";
+    std::string raport = "Raport Statistic Meci\n";
     int totalSeturi = seturiCastigateGazda + seturiCastigateOaspete;
     raport += "Total seturi disputate: " + std::to_string(totalSeturi) + "\n";
 
@@ -59,22 +59,18 @@ std::string Meci::genereazaRaportDetaliat() const {
             raport += "Victorie pentru echipa oaspete!\n";
         }
 
-        if (totalSeturi == 3) {
-            raport += "Victorie clara in minimum de seturi (3-0).\n";
-        } else if (totalSeturi == 4) {
-            raport += "Meci disputat, decis in 4 seturi (3-1).\n";
-        } else if (totalSeturi == 5) {
-            raport += "Meci dramatic decis in setul decisiv / Tie-Break (3-2)!\n";
+        if (totalSeturi == 2) {
+            raport += "Victorie clara in minimum de seturi (2-0).\n";
+        } else if (totalSeturi == 3) {
+            raport += "Meci dramatic decis in setul decisiv / Tie-Break (2-1)!\n";
         }
     } else {
         raport += "Meci in desfasurare.\n";
         int diferenta = std::abs(seturiCastigateGazda - seturiCastigateOaspete);
         if (diferenta == 0) {
-            raport += "Echilibru perfect la seturi in acest moment.\n";
-        } else if (diferenta == 1) {
-            raport += "Avantaj minim de un set pe tabela.\n";
+            raport += "Echilibru perfect la seturi in acest moment (1-1).\n";
         } else {
-            raport += "Avantaj de doua seturi.\n";
+            raport += "Avantaj minim de un set pe tabela (1-0).\n";
         }
     }
     return raport;
