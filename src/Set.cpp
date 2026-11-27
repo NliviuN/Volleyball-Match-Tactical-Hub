@@ -126,6 +126,7 @@ void Set::afisareMeniuTactic() {
         if (optiune == 2) {
             std::cout << "\n--- BANCA DE REZERVE ---\n";
             tabulate::Table tabelRezerve;
+            tabelRezerve.format().locale("C");
             tabelRezerve.add_row({"Detalii Jucator", "Stamina", "Status"});
             for (const auto& j : echipaMea.getLot()) {
                 std::ostringstream ossJ, ossStamina;
@@ -139,6 +140,7 @@ void Set::afisareMeniuTactic() {
 
             std::cout << "\n--- TITULARI TEREN ---\n";
             tabulate::Table tabelTitulari;
+            tabelTitulari.format().locale("C");
             tabelTitulari.add_row({"Zona", "Detalii Jucator", "Stamina", "Status"});
             for (int i = 1; i <= 6; i++) {
                 const auto& titular = echipaMea.getJucator(i);
@@ -192,6 +194,7 @@ void Set::afisareMeniuTactic() {
             }
         } else if (optiune == 4) {
             tabulate::Table tabelInfoTeren;
+            tabelInfoTeren.format().locale("C");
             tabelInfoTeren.add_row({"Zona", "Nume Jucator", "Post", "Stamina"});
 
             for (int i = 1; i <= 6; i++) {

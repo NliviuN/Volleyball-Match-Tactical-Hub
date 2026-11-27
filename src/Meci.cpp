@@ -101,6 +101,7 @@ std::string Meci::determinaStareMeci() const {
 
 std::string Meci::genereazaRaportDetaliat() const {
     tabulate::Table tabelRaport;
+    tabelRaport.format().locale("C");
 
     tabelRaport.add_row({"=== RAPORT STATISTIC MECI ==="});
     tabelRaport.row(0).format().font_style({tabulate::FontStyle::bold}).font_color(tabulate::Color::yellow);
@@ -178,6 +179,7 @@ bool Meci::meniuRaportStatistic() const {
 
 void Meci::afiseazaScorul() const {
     tabulate::Table tabelScor;
+    tabelScor.format().locale("C");
     tabelScor.add_row({"Echipa", "Seturi Castigate", "Necesar Victorie"});
 
     std::ostringstream ossG, ossO, ossNecesar;
@@ -212,6 +214,7 @@ std::ostream& operator<<(std::ostream& os, const Meci& meci) {
 
     if (!meci.getSeturiJucate().empty()) {
         tabulate::Table tabelSeturi;
+        tabelSeturi.format().locale("C");
         tabelSeturi.add_row({"Set", meci.echipaGazda.getNumeEchipa(), meci.echipaOaspete.getNumeEchipa()});
 
         for (size_t i = 0; i < meci.getSeturiJucate().size(); ++i) {

@@ -30,6 +30,7 @@ static void afisareEchipaCompleta(const Echipa& echipa) {
 
     std::cout << "[TITULARI PE TEREN]\n";
     tabulate::Table tabelTitulari;
+    tabelTitulari.format().locale("C");
     tabelTitulari.add_row({"Zona", "Jucator"});
     for (int zona = 1; zona <= 6; ++zona) {
         std::ostringstream ossZona, ossJucator;
@@ -45,6 +46,7 @@ static void afisareEchipaCompleta(const Echipa& echipa) {
         std::cout << "  Nicio rezerva disponibila.\n";
     } else {
         tabulate::Table tabelRezerve;
+        tabelRezerve.format().locale("C");
         tabelRezerve.add_row({"Nr.", "Jucator"});
         for (size_t i = 0; i < rezerve.size(); ++i) {
             std::ostringstream ossNr, ossJucator;
@@ -123,6 +125,7 @@ static int afiseazaJucatoriDupaPost(const std::vector<Jucator> &listaJucatori, c
     } else { std::cout << " *** \n"; }
 
     tabulate::Table tabelJucatoriPost;
+    tabelJucatoriPost.format().locale("C");
     tabelJucatoriPost.add_row({"Nr.", "Jucator si Statistici", "Punctaj Total"});
 
     int contor = 1;
@@ -641,6 +644,7 @@ static void joacaMeciComplet(Echipa &echipa1, Echipa &echipa2) {
         if (optiuneFormat == 0) {
             std::cout << "\n=== AFISARE DETALII FORMATE ===\n";
             tabulate::Table tabelDetalii;
+            tabelDetalii.format().locale("C");
             tabelDetalii.add_row({"Nr.", "Detalii Format"});
 
             for (size_t i = 0; i < formateDisponibile.size(); ++i) {
