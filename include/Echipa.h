@@ -31,13 +31,14 @@ public:
     void adaugaJucator(const Jucator& jucator);
     bool seteazaTitularPeZona(int zona, const std::string& numeJucator, bool afiseaza);
     bool seteazaLibero(const std::string& numeJucator, bool afiseaza = true);
-    bool efectueazaSchimbare(int zonaTeren, const std::string& numeRezerva);
+    bool efectueazaSchimbare(int zonaTeren, const std::string& numeRezerva, int limitaSchimbari = 6);
     void jucatoriPePosturiFixe();
     void revinoLaAsezareaInitiala();
     void roteste();
     bool introduceLibero(int zonaSpate);
     void scoateLibero();
     void timeout();
+    void pregatestePentruSetNou(int puncteRecuperare);
     const std::string& getNumeEchipa() const;
     Jucator& getJucator(int zona);
     int getSetter() const;

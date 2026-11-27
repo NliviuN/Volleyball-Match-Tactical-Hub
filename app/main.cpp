@@ -7,6 +7,10 @@
 #include "Set.h"
 // cppcheck-suppress missingInclude
 #include  <nlohmann/json.hpp> // v3.12.0
+#include <tabulate/table.hpp>
+#include <sstream>
+
+#include "ExceptiiVolei.h"
 #include "Meci.h"
 
 struct EchipaSalvata {
@@ -20,21 +24,35 @@ static void afisareEchipaCompleta(const Echipa& echipa) {
     std::cout << "========================================\n";
 
     std::cout << "[LIBERO ACTIV]\n";
-    std::cout << "  - " << echipa.getLibero() << "\n\n";
+    std::ostringstream ossLibero;
+    ossLibero << echipa.getLibero();
+    std::cout << "  - " << ossLibero.str() << "\n\n";
 
     std::cout << "[TITULARI PE TEREN]\n";
+    tabulate::Table tabelTitulari;
+    tabelTitulari.add_row({"Zona", "Jucator"});
     for (int zona = 1; zona <= 6; ++zona) {
-        std::cout << "  Zona " << zona << ": " << echipa.getTitularZona(zona) << "\n";
+        std::ostringstream ossZona, ossJucator;
+        ossZona << "Zona " << zona;
+        ossJucator << echipa.getTitularZona(zona);
+        tabelTitulari.add_row({ossZona.str(), ossJucator.str()});
     }
+    std::cout << tabelTitulari << "\n\n";
 
-    std::cout << "\n[REZERVE PE BANCA]\n";
+    std::cout << "[REZERVE PE BANCA]\n";
     const auto& rezerve = echipa.getLot();
     if (rezerve.empty()) {
         std::cout << "  Nicio rezerva disponibila.\n";
     } else {
+        tabulate::Table tabelRezerve;
+        tabelRezerve.add_row({"Nr.", "Jucator"});
         for (size_t i = 0; i < rezerve.size(); ++i) {
-            std::cout << "  " << (i + 1) << ". " << rezerve[i] << "\n";
+            std::ostringstream ossNr, ossJucator;
+            ossNr << (i + 1);
+            ossJucator << rezerve[i];
+            tabelRezerve.add_row({ossNr.str(), ossJucator.str()});
         }
+        std::cout << tabelRezerve << "\n";
     }
     std::cout << "========================================\n";
 }
@@ -44,33 +62,47 @@ static std::vector<Jucator> citesteJucatoriDinFisier(const std::string& numeFisi
     std::ifstream fisier(numeFisier);
 
     if (!fisier.is_open()) {
-        std::cout<< "Nu s-a putut deschide fisierul!"<<std::endl;
-        return listaJucatori;
+        throw EroareDate("Nu s-a putut deschide fisierul: " + numeFisier);
     }
 
     nlohmann::json jData;
-    fisier >> jData;
+    try {
+        fisier >> jData;
+    } catch (const nlohmann::json::exception& e) {
+        throw EroareDate("Fisierul JSON este corupt sau invalid: " + std::string(e.what()));
+    }
 
-    for (const auto& elem : jData) {
-        std::string nume = elem["nume"];
-        std::string postStr = elem["post"];
-        double inaltime = elem["inaltime"];
-        int serva = elem["serva"];
-        int preluare = elem["preluare"];
-        int pasa = elem["pasa"];
-        int atac = elem["atac"];
-        int block = elem["block"];
-        int stamina = elem["stamina"];
+    if (!jData.is_array() || jData.empty()) {
+        throw EroareDate("Fisierul " + numeFisier + " nu contine o lista valida de jucatori!");
+    }
 
-        PostJucator post = PostJucator::Outside_Hitter;
-        if (postStr == "Setter") post = PostJucator::Setter;
-        else if (postStr == "Middle Blocker") post = PostJucator::Middle_Blocker;
-        else if (postStr == "Opposite") post = PostJucator::Opposite;
-        else if (postStr == "Libero") post = PostJucator::Libero;
+    try {
+        for (const auto& elem : jData) {
+            std::string nume = elem.at("nume");
+            std::string postStr = elem.at("post");
+            double inaltime = elem.at("inaltime");
+            int serva = elem.at("serva");
+            int preluare = elem.at("preluare");
+            int pasa = elem.at("pasa");
+            int atac = elem.at("atac");
+            int block = elem.at("block");
+            int stamina = elem.at("stamina");
 
-        StatisticiJucator stats(inaltime, serva, preluare, pasa, atac, block, stamina);
-        Jucator jucator(nume, post, stats);
-        listaJucatori.push_back(jucator);
+            PostJucator post;
+            if (postStr == "Outside Hitter") post = PostJucator::Outside_Hitter;
+            else if (postStr == "Setter") post = PostJucator::Setter;
+            else if (postStr == "Middle Blocker") post = PostJucator::Middle_Blocker;
+            else if (postStr == "Opposite") post = PostJucator::Opposite;
+            else if (postStr == "Libero") post = PostJucator::Libero;
+            else {
+                throw EroareDate("Post necunoscut '" + postStr + "' pentru jucatorul " + nume);
+            }
+
+            StatisticiJucator stats(inaltime, serva, preluare, pasa, atac, block, stamina);
+            listaJucatori.emplace_back(nume, post, stats);
+        }
+    } catch (const nlohmann::json::exception& e) {
+        throw EroareDate("Structura JSON invalida pentru un jucator: " + std::string(e.what()));
     }
 
     return listaJucatori;
@@ -85,17 +117,34 @@ static int afiseazaJucatoriDupaPost(const std::vector<Jucator> &listaJucatori, c
     else if (post == PostJucator::Opposite) postStr = "Opposite";
     else if (post == PostJucator::Setter) postStr = "Setter";
 
-    int contor = 1;
     std::cout << "\n *** Lista " << postStr << "s";
     if (bugetDisponibil < 10000) {
         std::cout << " (Buget disponibil: " << bugetDisponibil << ") *** \n";
     } else { std::cout << " *** \n"; }
-    for(const Jucator& j: listaJucatori) {
+
+    tabulate::Table tabelJucatoriPost;
+    tabelJucatoriPost.add_row({"Nr.", "Jucator si Statistici", "Punctaj Total"});
+
+    int contor = 1;
+    for (const Jucator& j: listaJucatori) {
         if (j.getPost() == post && j.getPunctajTotal() <= bugetDisponibil) {
-            std::cout << contor << ". " << j << std::endl;
+            std::ostringstream ossNr, ossDetalii, ossPunctaj;
+            ossNr << contor;
+            ossDetalii << j;
+            ossPunctaj << j.getPunctajTotal();
+
+            tabelJucatoriPost.add_row({ossNr.str(), ossDetalii.str(), ossPunctaj.str()});
             contor++;
         }
     }
+
+    if (contor == 1) {
+        std::cout << "Nu există jucători disponibili pentru acest post în bugetul curent.\n";
+    } else {
+        tabelJucatoriPost.column(1).format().width(55);
+        std::cout << tabelJucatoriPost << "\n";
+    }
+
     std::cout << "----------------------------------------------------------------\n";
     return contor - 1;
 }
@@ -480,72 +529,157 @@ static std::vector<EchipaSalvata> incarcaEchipeDinFisier(const std::string& nume
     std::vector<EchipaSalvata> echipeIncarcate;
     std::ifstream in(numeFisier);
     if (!in.is_open()) {
-        return echipeIncarcate;
+        return echipeIncarcate; // Normal dacă nu s-a salvat încă nicio echipă
+    }
+
+    if (in.peek() == std::ifstream::traits_type::eof()) {
+        return echipeIncarcate; // Fișier gol, nimic de încărcat
     }
 
     nlohmann::json jArray;
-    in >> jArray;
+    try {
+        in >> jArray;
+    } catch (const nlohmann::json::exception& e) {
+        throw EroareDate("Fisierul cu echipe salvate (" + numeFisier + ") este corupt: " + std::string(e.what()));
+    }
 
-    for (const auto& jEchipa : jArray) {
-        std::string numeEchipa = jEchipa["nume_echipa"];
-        std::string numeLibero = jEchipa["libero"];
-        std::vector<std::string> numeTitulari = jEchipa["titulari"].get<std::vector<std::string>>();
-        std::vector<std::string> numeRezerve = jEchipa["rezerve"].get<std::vector<std::string>>();
+    if (!jArray.is_array()) {
+        throw EroareDate("Format invalid in " + numeFisier + ": se astepta o lista JSON de echipe.");
+    }
 
-        Echipa echipaReconstruita(numeEchipa);
-        std::vector<std::string> jucatoriFolositi;
+    try {
+        for (const auto& jEchipa : jArray) {
+            std::string numeEchipa = jEchipa.at("nume_echipa");
+            std::string numeLibero = jEchipa.at("libero");
+            std::vector<std::string> numeTitulari = jEchipa.at("titulari").get<std::vector<std::string>>();
+            std::vector<std::string> numeRezerve = jEchipa.at("rezerve").get<std::vector<std::string>>();
 
-        Jucator jTemp;
-        if (gasesteJucatorDupaNume(totiJucatorii, numeLibero, jTemp)) {
-            echipaReconstruita.adaugaJucator(jTemp);
-            jucatoriFolositi.push_back(numeLibero);
-        }
-        for (const auto& numeT : numeTitulari) {
-            if (gasesteJucatorDupaNume(totiJucatorii, numeT, jTemp)) {
+            if (numeTitulari.size() < 6) {
+                throw EroareDate("Echipa salvata '" + numeEchipa + "' are mai putin de 6 titulari!");
+            }
+
+            Echipa echipaReconstruita(numeEchipa);
+            std::vector<std::string> jucatoriFolositi;
+
+            Jucator jTemp;
+            if (gasesteJucatorDupaNume(totiJucatorii, numeLibero, jTemp)) {
                 echipaReconstruita.adaugaJucator(jTemp);
-                jucatoriFolositi.push_back(numeT);
+                jucatoriFolositi.push_back(numeLibero);
             }
-        }
-        for (const auto& numeR : numeRezerve) {
-            if (gasesteJucatorDupaNume(totiJucatorii, numeR, jTemp)) {
-                echipaReconstruita.adaugaJucator(jTemp);
-                jucatoriFolositi.push_back(numeR);
+            for (const auto& numeT : numeTitulari) {
+                if (gasesteJucatorDupaNume(totiJucatorii, numeT, jTemp)) {
+                    echipaReconstruita.adaugaJucator(jTemp);
+                    jucatoriFolositi.push_back(numeT);
+                }
             }
-        }
-
-        echipaReconstruita.seteazaLibero(numeLibero, false);
-        for (int zona = 1; zona <= 6; ++zona) {
-            echipaReconstruita.seteazaTitularPeZona(zona, numeTitulari[zona - 1], false);
-        }
-
-        std::vector<Jucator> ramasi;
-        for (const auto& j : totiJucatorii) {
-            if (std::find(jucatoriFolositi.begin(), jucatoriFolositi.end(), j.getNume()) == jucatoriFolositi.end()) {
-                ramasi.push_back(j);
+            for (const auto& numeR : numeRezerve) {
+                if (gasesteJucatorDupaNume(totiJucatorii, numeR, jTemp)) {
+                    echipaReconstruita.adaugaJucator(jTemp);
+                    jucatoriFolositi.push_back(numeR);
+                }
             }
-        }
 
-        echipeIncarcate.push_back({echipaReconstruita, ramasi});
+            echipaReconstruita.seteazaLibero(numeLibero, false);
+            for (int zona = 1; zona <= 6; ++zona) {
+                echipaReconstruita.seteazaTitularPeZona(zona, numeTitulari[zona - 1], false);
+            }
+
+            std::vector<Jucator> ramasi;
+            for (const auto& j : totiJucatorii) {
+                if (std::find(jucatoriFolositi.begin(), jucatoriFolositi.end(), j.getNume()) == jucatoriFolositi.end()) {
+                    ramasi.push_back(j);
+                }
+            }
+
+            echipeIncarcate.push_back({echipaReconstruita, ramasi});
+        }
+    } catch (const nlohmann::json::exception& e) {
+        throw EroareDate("Structura JSON invalida in " + numeFisier + ": " + std::string(e.what()));
     }
 
     return echipeIncarcate;
 }
 
 static void joacaMeciComplet(Echipa &echipa1, Echipa &echipa2) {
-    Meci meci(echipa1, echipa2);
+    std::vector<std::unique_ptr<FormatMeci>> formateDisponibile;
+    formateDisponibile.push_back(std::make_unique<MeciOficial>());
+    formateDisponibile.push_back(std::make_unique<MeciAmical>());
+    formateDisponibile.push_back(std::make_unique<TurneuRapid>());
+
+    int optiuneFormat;
+    while (true) {
+        std::cout << "\n========================================\n";
+        std::cout << "      ALEGE FORMATUL MECIULUI DE VOLEI  \n";
+        std::cout << "========================================\n";
+
+        for (size_t i = 0; i < formateDisponibile.size(); ++i) {
+            std::cout << (i + 1) << ". " << formateDisponibile[i]->getNumeFormat() << "\n";
+        }
+        std::cout << static_cast<int>(formateDisponibile.size())+1 << ". Inapoi la meniul principal"<< "\n";
+        std::cout << "========================================\n";
+
+        std::cout << "Introdu numarul formatului dorit (1-" << formateDisponibile.size()<< " sau 0 pentru detalii): ";
+
+        optiuneFormat= -1;
+        if (!(std::cin >> optiuneFormat) || optiuneFormat < 0 || optiuneFormat > static_cast<int>(formateDisponibile.size())+1) {
+            if (std::cin.eof()) {
+                return;
+            }
+            std::cin.clear();
+            std::cin.ignore(10000, '\n');
+            std::cout << ">>> Input invalid sau optiune inexistenta!\n";
+        }
+
+        if (optiuneFormat > 0 && optiuneFormat <= static_cast<int>(formateDisponibile.size())) {
+            break;
+        }
+
+        if (optiuneFormat == static_cast<int>(formateDisponibile.size())+1) {
+            return;
+        }
+
+        if (optiuneFormat == 0) {
+            std::cout << "\n=== AFISARE DETALII FORMATE ===\n";
+            tabulate::Table tabelDetalii;
+            tabelDetalii.add_row({"Nr.", "Detalii Format"});
+
+            for (size_t i = 0; i < formateDisponibile.size(); ++i) {
+                std::ostringstream oss;
+                oss << *formateDisponibile[i];
+                tabelDetalii.add_row({std::to_string(i + 1), oss.str()});
+            }
+
+            std::cout << tabelDetalii << "\n";
+            std::cout << "========================================\n";
+        }
+    }
+    const FormatMeci* formatAles = formateDisponibile[optiuneFormat - 1].get();
+
+    Meci meci(echipa1, echipa2, *formatAles);
 
     while (!meci.esteMeciulTerminat() && !std::cin.eof()) {
-        Set setCurent(echipa1, echipa2);
+        int numarSetCurent = static_cast<int>(meci.getSeturiJucate().size()) + 1;
+
+        Set setCurent(echipa1, echipa2, meci.getFormat(), numarSetCurent);
         setCurent.joacaSet();
+        if (setCurent.esteAbandonat()) return;
+
         if (std::cin.eof()) {
             break;
         }
+
         echipa1 = setCurent.getEchipaMea();
         echipa2 = setCurent.getEchipaAdversa();
         meci.inregistreazaSet(setCurent, setCurent.AmCastigat());
         std::cout << meci.determinaStareMeci() << std::endl;
         meci.afiseazaScorul();
-        meci.meniuRaportStatistic();
+        if (!meci.meniuRaportStatistic()) return;
+
+        if (!meci.esteMeciulTerminat()) {
+            std::cout << ">>> Pauza intre seturi: jucatorii recupereaza stamina ("
+                      << meci.getFormat()->calculeazaRecuperareStamina() << "%)...\n";
+            meci.pregatesteEchipeIntreSeturi(echipa1, echipa2);
+        }
     }
     meci.reseteazaMeci();
 }
@@ -560,117 +694,134 @@ static bool existaNumeEchipa(const std::vector<EchipaSalvata>& echipeCreate, con
 }
 
 int main() {
-    std::vector<Jucator> listaJucatori;
-    listaJucatori = citesteJucatoriDinFisier("jucatori.json");
-    std::vector<EchipaSalvata> echipeCreate = incarcaEchipeDinFisier("echipe_salvate.json", listaJucatori);
-    int optiuneMeniu = 0;
-    while (true) {
-        std::cout << "\n===============================" << std::endl;
-        std::cout << "         MENIU PRINCIPAL       " << std::endl;
-        std::cout << "===============================" << std::endl;
-        std::cout << "1. Creeaza echipa" << std::endl;
-        std::cout << "2. Alege echipa" << std::endl;
-        std::cout << "3. Exit" << std::endl;
-        std::cout << "Alege o optiune: ";
+    try {
+        std::vector<Jucator> listaJucatori;
+        listaJucatori = citesteJucatoriDinFisier("jucatori.json");
+        std::vector<EchipaSalvata> echipeCreate = incarcaEchipeDinFisier("echipe_salvate.json", listaJucatori);
+        int optiuneMeniu = 0;
+        while (true) {
+            std::cout << "\n===============================" << std::endl;
+            std::cout << "         MENIU PRINCIPAL       " << std::endl;
+            std::cout << "===============================" << std::endl;
+            std::cout << "1. Creeaza echipa" << std::endl;
+            std::cout << "2. Alege echipa" << std::endl;
+            std::cout << "3. Exit" << std::endl;
+            std::cout << "Alege o optiune: ";
 
-        if (!(std::cin >> optiuneMeniu)) {
-            break;
-        }
+            if (!(std::cin >> optiuneMeniu)) {
+                break;
+            }
 
-        if (optiuneMeniu == 1) {
-            std::string numeEchipa;
+            if (optiuneMeniu == 1) {
+                std::string numeEchipa;
 
-            while (true) {
-                std::cout << "Introdu numele echipei: ";
-                if (!(std::cin >> numeEchipa)) {
-                    return 0;
+                while (true) {
+                    std::cout << "Introdu numele echipei (sau 0 pentru Inapoi): ";
+                    if (!(std::cin >> numeEchipa)) {
+                        return 0;
+                    }
+
+                    if (existaNumeEchipa(echipeCreate, numeEchipa)) {
+                        std::cout << "Eroare: Echipa '" << numeEchipa
+                                  << "' exista deja! Alege un nume diferit.\n";
+                        continue;
+                    }
+                    break;
                 }
-
-                if (existaNumeEchipa(echipeCreate, numeEchipa)) {
-                    std::cout << "Eroare: Echipa '" << numeEchipa
-                              << "' exista deja! Alege un nume diferit.\n";
+                if (numeEchipa == "0") {
                     continue;
                 }
-                break;
-            }
+                std::vector<Jucator> jucatoriDisponibili = listaJucatori;
+                Echipa echipaNoua = creeazaEchipa(numeEchipa, jucatoriDisponibili);
+                configureazaTeren(echipaNoua);
 
-            std::vector<Jucator> jucatoriDisponibili = listaJucatori;
-            Echipa echipaNoua = creeazaEchipa(numeEchipa, jucatoriDisponibili);
-            configureazaTeren(echipaNoua);
+                echipeCreate.push_back({echipaNoua, jucatoriDisponibili});
+                salveazaEchipeInFisier("echipe_salvate.json", echipeCreate);
+                std::cout << "Echipa " << numeEchipa << " a fost adaugata automat in 'Alege echipa'!" << std::endl;
 
-            echipeCreate.push_back({echipaNoua, jucatoriDisponibili});
-            salveazaEchipeInFisier("echipe_salvate.json", echipeCreate);
-            std::cout << "Echipa " << numeEchipa << " a fost adaugata automat in 'Alege echipa'!" << std::endl;
+            } else if (optiuneMeniu == 2) {
+                if (echipeCreate.empty()) {
+                    std::cout << "Nu exista nicio echipa creata! Creeaza una mai intai." << std::endl;
+                    continue;
+                }
 
-        } else if (optiuneMeniu == 2) {
-            if (echipeCreate.empty()) {
-                std::cout << "Nu exista nicio echipa creata! Creeaza una mai intai." << std::endl;
-                continue;
-            }
+                std::cout << "Alege echipa:" << std::endl;
+                for (int i = 0; i < static_cast<int>(echipeCreate.size()); ++i) {
+                    std::cout << i + 1 << ". " << echipeCreate[i].echipa.getNumeEchipa() << std::endl;
+                }
+                std::cout << "Alege numarul echipei (sau 0 pentru inapoi): ";
 
-            std::cout << "Alege echipa:" << std::endl;
-            for (int i = 0; i < static_cast<int>(echipeCreate.size()); ++i) {
-                std::cout << i + 1 << ". " << echipeCreate[i].echipa.getNumeEchipa() << std::endl;
-            }
-            std::cout << "Alege numarul echipei: ";
-
-            int indexEchipa = 0;
-            if (!(std::cin >> indexEchipa)) {
-                break;
-            }
-
-            if (indexEchipa < 1 || indexEchipa > static_cast<int>(echipeCreate.size())) {
-                std::cout << "Numar invalid! Revenire la meniul principal." << std::endl;
-                continue;
-            }
-
-            EchipaSalvata selectie = echipeCreate[indexEchipa - 1];
-            std::cout << "Ai ales echipa: " << selectie.echipa.getNumeEchipa() << std::endl;
-
-            while (true) {
-                std::cout << "\n--- MENIU ECHIPA: " << selectie.echipa.getNumeEchipa() << " ---\n";
-                std::cout << "1. Joaca" << std::endl;
-                std::cout << "2. Afiseaza jucatorii si statisticile" << std::endl;
-                std::cout << "3. Sterge aceasta echipa" << std::endl;
-                std::cout << "4. Inapoi la meniul principal" << std::endl;
-                std::cout << "Alege o optiune: ";
-
-                int optiuneJoc = 0;
-                if (!(std::cin >> optiuneJoc)) {
+                int indexEchipa = 0;
+                if (!(std::cin >> indexEchipa)) {
                     break;
                 }
 
-                if (optiuneJoc == 1) {
-                    std::vector<Jucator> ramasiPentruAdversar = selectie.jucatoriRamasi;
-                    Echipa echipaAdversa = creeazaEchipaAutomata("Adversar_" + selectie.echipa.getNumeEchipa(), ramasiPentruAdversar);
-                    joacaMeciComplet(selectie.echipa, echipaAdversa);
-                    break;
-
-                } else if (optiuneJoc == 2) {
-                    std::cout << "\n=== LOTUL SI STATISTICILE ECHIPEI " << selectie.echipa.getNumeEchipa() << " ===\n";
-                    afisareEchipaCompleta(selectie.echipa);
-
-                } else if (optiuneJoc == 3) {
-                    std::string numeSters = selectie.echipa.getNumeEchipa();
-                    echipeCreate.erase(echipeCreate.begin() + (indexEchipa - 1));
-                    salveazaEchipeInFisier("echipe_salvate.json", echipeCreate);
-                    std::cout << "Echipa '" << numeSters << "' a fost stearsa definitiv!\n";
-                    break;
-
-                } else if (optiuneJoc == 4) {
-                    std::cout << "Revenire la meniul principal..." << std::endl;
-                    break;
-
-                } else {
-                    std::cout << "Optiune invalida! Alege intre 1 si 4." << std::endl;
+                if (indexEchipa < 0 || indexEchipa > static_cast<int>(echipeCreate.size())) {
+                    std::cout << "Numar invalid! Revenire la meniul principal." << std::endl;
+                    continue;
                 }
+
+                if (indexEchipa == 0) {
+                    continue;
+                }
+
+                EchipaSalvata selectie = echipeCreate[indexEchipa - 1];
+                std::cout << "Ai ales echipa: " << selectie.echipa.getNumeEchipa() << std::endl;
+
+                while (true) {
+                    std::cout << "\n--- MENIU ECHIPA: " << selectie.echipa.getNumeEchipa() << " ---\n";
+                    std::cout << "1. Joaca" << std::endl;
+                    std::cout << "2. Afiseaza jucatorii si statisticile" << std::endl;
+                    std::cout << "3. Sterge aceasta echipa" << std::endl;
+                    std::cout << "4. Inapoi la meniul principal" << std::endl;
+                    std::cout << "Alege o optiune: ";
+
+                    int optiuneJoc = 0;
+                    if (!(std::cin >> optiuneJoc)) {
+                        break;
+                    }
+
+                    if (optiuneJoc == 1) {
+                        std::vector<Jucator> ramasiPentruAdversar = selectie.jucatoriRamasi;
+                        Echipa echipaAdversa = creeazaEchipaAutomata("Adversar_" + selectie.echipa.getNumeEchipa(), ramasiPentruAdversar);
+                        joacaMeciComplet(selectie.echipa, echipaAdversa);
+                        break;
+
+                    } else if (optiuneJoc == 2) {
+                        std::cout << "\n=== LOTUL SI STATISTICILE ECHIPEI " << selectie.echipa.getNumeEchipa() << " ===\n";
+                        afisareEchipaCompleta(selectie.echipa);
+
+                    } else if (optiuneJoc == 3) {
+                        std::string numeSters = selectie.echipa.getNumeEchipa();
+                        echipeCreate.erase(echipeCreate.begin() + (indexEchipa - 1));
+                        salveazaEchipeInFisier("echipe_salvate.json", echipeCreate);
+                        std::cout << "Echipa '" << numeSters << "' a fost stearsa definitiv!\n";
+                        break;
+
+                    } else if (optiuneJoc == 4) {
+                        std::cout << "Revenire la meniul principal..." << std::endl;
+                        break;
+
+                    } else {
+                        std::cout << "Optiune invalida! Alege intre 1 si 4." << std::endl;
+                    }
+                }
+            } else if (optiuneMeniu == 3) {
+                std::cout << "Exit!" << std::endl;
+                break;
+            } else {
+                std::cout << "Optiune gresita! Alege 1, 2 sau 3." << std::endl;
             }
-        } else if (optiuneMeniu == 3) {
-            std::cout << "Exit!" << std::endl;
-            break;
-        } else {
-            std::cout << "Optiune gresita! Alege 1, 2 sau 3." << std::endl;
         }
+    }
+    catch (const EroareDate & e) {
+        std::cerr << e.what() << std::endl;
+        std::cerr << "Programul se opreste din cauza fisierului de date."<<std::endl;
+        return 1;
+    }
+    catch (const EroareVolei& e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
     }
 
     return 0;

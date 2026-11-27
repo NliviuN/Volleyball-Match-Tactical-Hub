@@ -1,5 +1,7 @@
 #include "Echipa.h"
 
+#include "ExceptiiVolei.h"
+
 bool Echipa::esteZonaValida(int zona) {
     return zona >= 1 && zona <= 6;
 }
@@ -66,20 +68,18 @@ bool Echipa::seteazaLibero(const std::string &numeJucator, bool afiseaza) {
     return false;
 }
 
-bool Echipa::efectueazaSchimbare(int zonaTeren, const std::string &numeRezerva) {
+bool Echipa::efectueazaSchimbare(int zonaTeren, const std::string &numeRezerva, int limitaSchimbari) {
     if (esteInAsezareFixa) {
         revinoLaAsezareaInitiala();
     }
-    if (schimbariEfectuate >= 6) {
-        std::cout<<"In acest set pentru echipa"<< numeEchipa <<"s-a atins limita de 6 schimbari!"<< std::endl;
-        return false;
+    if (schimbariEfectuate >= limitaSchimbari) {
+        throw EroareRegulament("Limita de 6 schimbari pe set a fost deja atinsa!");
     }
     if (!esteZonaValida(zonaTeren)) {
-        return false;
+        throw EroareRegulament("Zona selectata pentru schimbare este invalida (trebuie sa fie 1-6).");
     }
     if (liberoEsteInTeren && zonaTeren == zonaLibero) {
-        std::cout << "Nu poti face schimbare standard pe pozitia ocupata de Libero!" << std::endl;
-        return false;
+        throw EroareRegulament("Nu se poate efectua o schimbare standard pe pozitia ocupata de Libero!");
     }
 
     for (auto& rez : lot) {
@@ -91,8 +91,7 @@ bool Echipa::efectueazaSchimbare(int zonaTeren, const std::string &numeRezerva) 
             return true;
         }
     }
-    std::cout<<"Rezerva care a fost aleasa nu este disponibila!"<<std::endl;
-    return false;
+    throw EroareResurseEchipa("Jucatorul de rezerva selectat nu este disponibil!");
 }
 
 void Echipa::jucatoriPePosturiFixe() {
@@ -204,7 +203,18 @@ void Echipa::timeout() {
         }
         numarTimeouturi ++;
     } else {
-        std::cout << numeEchipa << " nu mai are timeout-uri!" << std::endl;
+        throw EroareRegulament("Echipa nu mai are timeout-uri disponibile in acest set (maxim 2).");
+    }
+}
+
+void Echipa::pregatestePentruSetNou(int puncteRecuperare) {
+    schimbariEfectuate = 0;
+    numarTimeouturi = 0;
+    for (auto& j: teren) {
+        j.cresteStamina(puncteRecuperare);
+    }
+    for (auto& j: lot) {
+        j.cresteStamina(puncteRecuperare);
     }
 }
 
@@ -214,7 +224,7 @@ const std::string& Echipa::getNumeEchipa() const {
 
 Jucator& Echipa::getJucator(int zona) {
     if (!esteZonaValida(zona)) {
-        return teren[0];
+        throw EroareRegulament("Zona terenului trebuie sa fie intre 1 si 6 (primit: " + std::to_string(zona) + ").");
     }
     return teren[zona - 1];
 }

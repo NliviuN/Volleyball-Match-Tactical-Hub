@@ -31,24 +31,24 @@ include(cmake/RegisterTests.cmake)
 
 # External dependencies with FetchContent
 
-# include(FetchContent)
+include(FetchContent)
 #
-# set(FETCHCONTENT_QUIET OFF CACHE INTERNAL "Override verbose output" FORCE)
-# set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE INTERNAL "Override update strategy" FORCE)
+set(FETCHCONTENT_QUIET OFF CACHE INTERNAL "Override verbose output" FORCE)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE INTERNAL "Override update strategy" FORCE)
 #
 # NOTE: Also update env vars used for caching in
 #     - .github/actions/configure-cmake/action.yml
 #     - .github/workflows/cmake.yml
-# FetchContent_Declare(
-#     SomeLib
-#     SYSTEM         # keeps ext libs out of static code analysis
-#     GIT_REPOSITORY https://github.com/<SomeUser>/<SomeLib>.git
-#     GIT_TAG        <some_git_hash> # <which tag/branch @ <some_date>>
-#     GIT_SHALLOW    1  # works only with branches or tags, not with arbitrary commit hashes
-#     GIT_PROGRESS   ON
-# )
+FetchContent_Declare(
+     tabulate
+     SYSTEM         # keeps ext libs out of static code analysis
+     GIT_REPOSITORY https://github.com/p-ranav/tabulate.git
+     GIT_TAG        v1.5 # <which tag/branch @ <some_date>>
+     GIT_SHALLOW    1  # works only with branches or tags, not with arbitrary commit hashes
+     GIT_PROGRESS   ON
+)
 #
-# FetchContent_MakeAvailable(SomeLib)
+FetchContent_MakeAvailable(tabulate)
 
 ###############################################################################
 
@@ -74,6 +74,8 @@ target_sources(${MAIN_LIBRARY_NAME}
         src/Echipa.cpp
         src/Set.cpp
         src/Meci.cpp
+        src/ExceptiiVolei.cpp
+        src/FormatMeci.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
@@ -106,6 +108,8 @@ target_include_directories(${MAIN_EXECUTABLE_NAME} SYSTEM PRIVATE
         ${EXT_PRIVATE_DIR}
 )
 
+target_include_directories(${MAIN_LIBRARY_NAME} SYSTEM PRIVATE ${tabulate_SOURCE_DIR}/include)
+target_include_directories(${MAIN_EXECUTABLE_NAME} SYSTEM PRIVATE ${tabulate_SOURCE_DIR}/include)
 # target_include_directories(${MAIN_EXECUTABLE_NAME} SYSTEM PRIVATE ${<SomeLib>_SOURCE_DIR}/include)
 
 ###############################################################################

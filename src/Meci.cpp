@@ -1,7 +1,64 @@
 #include "Meci.h"
+#include <tabulate/table.hpp>
+#include <sstream>
 
-Meci::Meci(const Echipa& gazda, const Echipa& oaspete)
-: echipaGazda(gazda), echipaOaspete(oaspete), seturiCastigateGazda(0), seturiCastigateOaspete(0) {}
+#include "ExceptiiVolei.h"
+
+int Meci::numarTotalMeciuri = 0;
+
+int Meci::getNumarTotalMeciuri() {
+    return numarTotalMeciuri;
+}
+
+Meci::Meci(const Echipa& gazda, const Echipa& oaspete, const FormatMeci& formatMeci) :
+echipaGazda(gazda), echipaOaspete(oaspete), seturiCastigateGazda(0), seturiCastigateOaspete(0), format(formatMeci.clone()) {
+
+    if (echipaGazda.getNumeEchipa() == echipaOaspete.getNumeEchipa()) {
+        throw EroareResurseEchipa("O echipa nu poate juca un meci impotriva ei insesi (" + echipaGazda.getNumeEchipa() + ")!");
+    }
+
+    for (int zona = 1; zona <= 6; ++zona) {
+        if (echipaGazda.getJucator(zona).getNume().empty() ||
+            echipaOaspete.getJucator(zona).getNume().empty()) {
+            throw EroareResurseEchipa("Ambele echipe trebuie sa aiba cei 6 titulari configurati pe teren!");
+            }
+    }
+    numarTotalMeciuri++;
+}
+
+Meci::Meci(const Meci& other)
+    : echipaGazda(other.echipaGazda),
+      echipaOaspete(other.echipaOaspete),
+      seturiJucate(other.seturiJucate),
+      seturiCastigateGazda(other.seturiCastigateGazda),
+      seturiCastigateOaspete(other.seturiCastigateOaspete),
+      format(other.format ? other.format->clone() : nullptr) {
+}
+
+void swap(Meci& a, Meci& b) noexcept {
+    using std::swap;
+    swap(a.echipaGazda, b.echipaGazda);
+    swap(a.echipaOaspete, b.echipaOaspete);
+    swap(a.seturiJucate, b.seturiJucate);
+    swap(a.seturiCastigateGazda, b.seturiCastigateGazda);
+    swap(a.seturiCastigateOaspete, b.seturiCastigateOaspete);
+    swap(a.format, b.format);
+}
+
+Meci& Meci::operator=(Meci other) {
+    swap(*this, other);
+    return *this;
+}
+
+FormatMeci* Meci::getFormat() const { return format.get();}
+
+void Meci::pregatesteEchipeIntreSeturi(Echipa &gazda, Echipa &oaspete) const {
+    int rec = static_cast<int>(format -> calculeazaRecuperareStamina());
+    gazda.pregatestePentruSetNou(rec);
+    oaspete.pregatestePentruSetNou(rec);
+}
+
+
 
 void Meci::inregistreazaSet(const Set &setNou, bool castigatDeGazda) {
     seturiJucate.push_back(setNou);
@@ -17,8 +74,9 @@ void Meci::inregistreazaSet(const Set &setNou, bool castigatDeGazda) {
     }
 }
 
+
 bool Meci::esteMeciulTerminat() const {
-    return (seturiCastigateGazda >= 2 || seturiCastigateOaspete >= 2);
+    return (seturiCastigateGazda >= format -> getSeturiPentruVictorie() || seturiCastigateOaspete >= format -> getSeturiPentruVictorie());
 }
 
 std::string Meci::determinaStareMeci() const {
@@ -42,38 +100,57 @@ std::string Meci::determinaStareMeci() const {
 }
 
 std::string Meci::genereazaRaportDetaliat() const {
-    std::cout << "-----------------------------------\n";
-    std::string raport = "Raport Statistic Meci\n";
+    tabulate::Table tabelRaport;
+
+    tabelRaport.add_row({"=== RAPORT STATISTIC MECI ==="});
+    tabelRaport.row(0).format().font_style({tabulate::FontStyle::bold}).font_color(tabulate::Color::yellow);
+
+    std::ostringstream ossInfo;
+    ossInfo << "Format utilizat: " << (format ? format->getNumeFormat() : "Nespecificat") << "\n"
+            << "Numar total meciuri inregistrate: " << getNumarTotalMeciuri() << "\n"
+            << "Echipe: " << echipaGazda.getNumeEchipa() << " vs " << echipaOaspete.getNumeEchipa();
+
+    tabelRaport.add_row({ossInfo.str()});
+
     int totalSeturi = seturiCastigateGazda + seturiCastigateOaspete;
-    raport += "Total seturi disputate: " + std::to_string(totalSeturi) + "\n";
+    std::ostringstream ossStare;
+    ossStare << "Total seturi disputate: " << totalSeturi;
 
     if (totalSeturi == 0) {
-        raport += "Meciul nu a inceput inca.\n";
-        return raport;
-    }
-
-    if (esteMeciulTerminat()) {
+        ossStare << "\nMeciul nu a inceput inca.";
+    } else if (esteMeciulTerminat()) {
         if (seturiCastigateGazda > seturiCastigateOaspete) {
-            raport += "Victorie pentru echipa gazda!\n";
+            ossStare << "\nRezultat: Victorie pentru echipa gazda (" << echipaGazda.getNumeEchipa() << ")!";
         } else {
-            raport += "Victorie pentru echipa oaspete!\n";
+            ossStare << "\nRezultat: Victorie pentru echipa oaspete (" << echipaOaspete.getNumeEchipa() << ")!";
         }
 
-        if (totalSeturi == 2) {
-            raport += "Victorie clara in minimum de seturi (2-0).\n";
-        } else if (totalSeturi == 3) {
-            raport += "Meci dramatic decis in setul decisiv / Tie-Break (2-1)!\n";
+        int seturiVictorie = format ? format->getSeturiPentruVictorie() : 3;
+        int seturiMaximPosibile = 2 * seturiVictorie - 1;
+        if (totalSeturi == seturiVictorie) {
+            ossStare << "\nVictorie clara in minimum de seturi (" << seturiVictorie << "-0).";
+        } else if (totalSeturi == seturiMaximPosibile) {
+            ossStare << "\nMeci dramatic decis in setul decisiv / Tie-Break (" << seturiVictorie << "-" << (seturiVictorie - 1) << ")!";
         }
     } else {
-        raport += "Meci in desfasurare.\n";
+        ossStare << "\nMeci in desfasurare.";
         int diferenta = std::abs(seturiCastigateGazda - seturiCastigateOaspete);
         if (diferenta == 0) {
-            raport += "Echilibru perfect la seturi in acest moment (1-1).\n";
+            ossStare << "\nEchilibru perfect pe tabela.";
         } else {
-            raport += "Avantaj minim de un set pe tabela (1-0).\n";
+            ossStare << "\nAvantaj minim de un set pe tabela.";
         }
     }
-    return raport;
+
+    tabelRaport.add_row({ossStare.str()});
+
+    std::ostringstream ossScorFinal;
+    ossScorFinal << "Scor General Seturi: " << seturiCastigateGazda << " - " << seturiCastigateOaspete;
+    tabelRaport.add_row({ossScorFinal.str()});
+
+    std::ostringstream ossFinal;
+    ossFinal << "\n" << tabelRaport << "\n";
+    return ossFinal.str();
 }
 
 void Meci::reseteazaMeci() {
@@ -82,20 +159,41 @@ void Meci::reseteazaMeci() {
     seturiCastigateOaspete = 0;
 }
 
-void Meci::meniuRaportStatistic() const {
-    std::cout << std::endl << "Doresti sa afisezi raportul statistic? (1 - Da / 0 - Nu): ";
+bool Meci::meniuRaportStatistic() const {
+    std::cout << std::endl << "Doresti sa afisezi raportul statistic? (1 - Da | 2 - Nu | 0 - Revino la meniul principal): ";
     int optiune = 0;
-    if (std::cin >> optiune && optiune == 1) {
+    if (!(std::cin >> optiune)) {
+        return false;
+    }
+    if (optiune == 1) {
         std::cout << std::endl << genereazaRaportDetaliat() << std::endl;
-        return;
+        return true;
+    } else if (optiune == 0) {
+        return false;
     } else {
         std::cout << "Continuam fara afisarea raportului." << std::endl;
-        return;
+        return true;
     }
 }
 
 void Meci::afiseazaScorul() const {
-    std::cout << "Scor: " <<echipaGazda.getNumeEchipa() << " (" << seturiCastigateGazda << ") - " << echipaOaspete.getNumeEchipa() << " (" << seturiCastigateOaspete << ")" << std::endl;
+    tabulate::Table tabelScor;
+    tabelScor.add_row({"Echipa", "Seturi Castigate", "Necesar Victorie"});
+
+    std::ostringstream ossG, ossO, ossNecesar;
+    ossG << seturiCastigateGazda;
+    ossO << seturiCastigateOaspete;
+    if (format) {
+        ossNecesar << format->getSeturiPentruVictorie();
+    } else {
+        ossNecesar << "3";
+    }
+
+    tabelScor.add_row({echipaGazda.getNumeEchipa(), ossG.str(), ossNecesar.str()});
+    tabelScor.add_row({echipaOaspete.getNumeEchipa(), ossO.str(), ossNecesar.str()});
+
+    std::cout << "\n--- SCOR CURENT MECI ---\n";
+    std::cout << tabelScor << std::endl;
 }
 
 
@@ -104,10 +202,29 @@ int Meci::getSeturiCastigateGazda() const { return seturiCastigateGazda;}
 int Meci::getSeturiCastigateOaspete() const { return seturiCastigateOaspete; }
 
 const std::vector<Set>& Meci::getSeturiJucate() const { return seturiJucate; }
+
 std::ostream& operator<<(std::ostream& os, const Meci& meci) {
-    os<<"Rezumat meci: "<<std::endl;
-    os<< "Total seturi disputate: " << meci.getSeturiJucate().size() << std::endl;
-    os<< "Scor general seturi: " << meci.getSeturiCastigateGazda() << " - " << meci.getSeturiCastigateOaspete() << std::endl;
-    os<< "Status: " << meci.determinaStareMeci() << std::endl;
+    if (meci.format) {
+        os << "_____________________\n" << *meci.format << "\n_____________________\n";
+    }
+    os << "Rezumat meci: " << std::endl;
+    os << "Total seturi disputate: " << meci.getSeturiJucate().size() << std::endl;
+
+    if (!meci.getSeturiJucate().empty()) {
+        tabulate::Table tabelSeturi;
+        tabelSeturi.add_row({"Set", meci.echipaGazda.getNumeEchipa(), meci.echipaOaspete.getNumeEchipa()});
+
+        for (size_t i = 0; i < meci.getSeturiJucate().size(); ++i) {
+            std::ostringstream ossNr, ossPG, ossPO;
+            ossNr << (i + 1);
+            ossPG << meci.getSeturiJucate()[i].getPuncteProprii();
+            ossPO << meci.getSeturiJucate()[i].getPuncteAdversari();
+            tabelSeturi.add_row({ossNr.str(), ossPG.str(), ossPO.str()});
+        }
+        os << tabelSeturi << "\n";
+    }
+
+    os << "Scor general seturi: " << meci.getSeturiCastigateGazda() << " - " << meci.getSeturiCastigateOaspete() << std::endl;
+    os << "Status: " << meci.determinaStareMeci() << std::endl;
     return os;
 }

@@ -8,8 +8,10 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <memory>
 #include "Echipa.h"
 #include "Set.h"
+#include "FormatMeci.h"
 
 class Meci {
 private:
@@ -18,10 +20,20 @@ private:
     std::vector<Set> seturiJucate;
     int seturiCastigateGazda;
     int seturiCastigateOaspete;
+    std::unique_ptr<FormatMeci> format;
+    static int numarTotalMeciuri;
 
 public:
 
-    Meci(const Echipa& gazda, const Echipa& oaspete);
+    static int getNumarTotalMeciuri();
+    Meci(const Echipa& gazda, const Echipa& oaspete, const FormatMeci& formatMeci = MeciOficial());
+    Meci(const Meci& other);
+    friend void swap(Meci& a, Meci& b) noexcept;
+    Meci& operator=(Meci other);
+    ~Meci() = default;
+
+    FormatMeci* getFormat() const;
+    void pregatesteEchipeIntreSeturi(Echipa& gazda, Echipa& oaspete) const;
     void inregistreazaSet(const Set& setNou, bool castigatDeGazda);
     bool esteMeciulTerminat() const;
     std::string determinaStareMeci() const;
@@ -29,7 +41,7 @@ public:
 
     std::string genereazaRaportDetaliat() const;
     void reseteazaMeci();
-    void meniuRaportStatistic() const;
+    bool meniuRaportStatistic() const;
 
     int getSeturiCastigateGazda() const;
     int getSeturiCastigateOaspete() const;

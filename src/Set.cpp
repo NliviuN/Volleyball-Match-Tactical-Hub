@@ -4,6 +4,10 @@
 #include<ctime>
 #include<cmath>
 #include<algorithm>
+#include <tabulate/table.hpp>
+#include <sstream>
+
+#include "ExceptiiVolei.h"
 
 static std::string numePostText(PostJucator post) {
     switch (post) {
@@ -16,8 +20,7 @@ static std::string numePostText(PostJucator post) {
     }
 }
 
-Set::Set(Echipa e1, Echipa e2)
-    :echipaMea(e1), echipaAdversa(e2), puncteProprii(0), puncteAdversari(0), esteServiciulMeu(true) {
+Set::Set(Echipa e1, Echipa e2, FormatMeci* format, int numarSet, bool ultimulPunctAdversar, bool meciAbandonat) :echipaMea(e1), echipaAdversa(e2), puncteProprii(0), puncteAdversari(0), esteServiciulMeu(true), format(format), numarSet(numarSet), ultimulPunctAdversar(ultimulPunctAdversar), meciAbandonat(meciAbandonat) {
     std::srand(static_cast<int>(std::time(nullptr)));
 }
 
@@ -31,6 +34,7 @@ void Set::acordaPunct(bool pentruEchipaMea) {
 
     if (pentruEchipaMea) {
         puncteProprii++;
+        ultimulPunctAdversar = false;
         if (!esteServiciulMeu) {
             std::cout << echipaMea.getNumeEchipa()<< " castiga serviciul si face rotatie!"<< std::endl;
             echipaMea.roteste();
@@ -38,6 +42,7 @@ void Set::acordaPunct(bool pentruEchipaMea) {
         }
     } else {
         puncteAdversari++;
+        ultimulPunctAdversar = true;
         if (esteServiciulMeu) {
             std::cout << echipaAdversa.getNumeEchipa()<< " castiga serviciul si face rotatie!"<< std::endl;
             echipaAdversa.roteste();
@@ -89,6 +94,10 @@ std::vector<int> Set::obtineZoneValideAtac(Echipa& echipa, int zonaSetter, int n
     return zoneValide;
 }
 
+bool Set::esteAbandonat() const {
+    return meciAbandonat;
+}
+
 void Set::afisareMeniuTactic() {
     int optiune;
     do {
@@ -98,6 +107,8 @@ void Set::afisareMeniuTactic() {
         std::cout << "2. Efectueaza o schimbare!" << std::endl;
         std::cout << "3. Timeout (+10 stamina)"<<std::endl;
         std::cout << "4. Afiseaza informatii despre teren (titulari/stamina)" <<std::endl;
+        std::cout << "5. Solicita Video Challenge" << std::endl;
+        std::cout << "6. Abandoneaza meciul" <<std::endl;
         std::cout << "Alege o optiune: ";
         std::cin >> optiune;
 
@@ -113,18 +124,33 @@ void Set::afisareMeniuTactic() {
         }
 
         if (optiune == 2) {
-            std::cout<< "Banca de rezerve:"<<std::endl;
+            std::cout << "\n--- BANCA DE REZERVE ---\n";
+            tabulate::Table tabelRezerve;
+            tabelRezerve.add_row({"Detalii Jucator", "Stamina", "Status"});
             for (const auto& j : echipaMea.getLot()) {
-                std::cout << j << " | Stamina: " << j.getStamina() << std::endl;
+                std::ostringstream ossJ, ossStamina;
+                ossJ << j;
+                ossStamina << j.getStamina() << "%";
+                std::string status = j.esteIndisponibil() ? "Indisponibil" : "Disponibil";
+                tabelRezerve.add_row({ossJ.str(), ossStamina.str(), status});
             }
-            std::cout<<std::endl;
+            tabelRezerve.column(0).format().width(55);
+            std::cout << tabelRezerve << std::endl;
 
-            std::cout<< "Titulari"<<std::endl;
-            for (int i = 1; i<=6; i++) {
-                std::cout<< "Zona " << i << ": " << echipaMea.getJucator(i) << " | Stamina: " << echipaMea.getJucator(i).getStamina() << std::endl;
+            std::cout << "\n--- TITULARI TEREN ---\n";
+            tabulate::Table tabelTitulari;
+            tabelTitulari.add_row({"Zona", "Detalii Jucator", "Stamina", "Status"});
+            for (int i = 1; i <= 6; i++) {
+                const auto& titular = echipaMea.getJucator(i);
+                std::ostringstream ossZona, ossJ, ossStamina;
+                ossZona << "Zona " << i;
+                ossJ << titular;
+                ossStamina << titular.getStamina() << "%";
+                std::string status = titular.esteIndisponibil() ? "Indisponibil" : "Disponibil";
+                tabelTitulari.add_row({ossZona.str(), ossJ.str(), ossStamina.str(), status});
             }
-
-            std::cout<<std::endl;
+            tabelTitulari.column(1).format().width(55);
+            std::cout << tabelTitulari << std::endl << std::endl;
 
             int zona = 0;
             std::cout << "Introdu numarul zonei(1-6) pentru schimbare (sau 0 pentru Inapoi): ";
@@ -140,11 +166,6 @@ void Set::afisareMeniuTactic() {
 
             if (zona == 0) {
                 std::cout << "Schimbare anulata. Revenire la meniul tactic.\n";
-                continue; // Se intoarce direct la afisarea meniului tactic!
-            }
-
-            if (zona < 1 || zona > 6) {
-                std::cout << "Zona invalida! Alegeti o zona intre 1 si 6.\n";
                 continue;
             }
 
@@ -153,22 +174,72 @@ void Set::afisareMeniuTactic() {
             std::cin.ignore();
             std::getline(std::cin, numeRezerva);
 
-            echipaMea.efectueazaSchimbare(zona, numeRezerva);
-        } else if (optiune == 3) {
-            echipaMea.timeout();
-        }else if (optiune == 4) {
-            std::cout<< "Titulari"<<std::endl;
-            for (int i = 1; i<=6; i++) {
-                std::cout<< "Zona " << i << ": "<< echipaMea.getJucator(i).getNume() << " (Stamina: " << echipaMea.getJucator(i).getStamina() << ", Post: " << numePostText(echipaMea.getJucator(i).getPost())<< ")" << std::endl;
+            try {
+                echipaMea.efectueazaSchimbare(zona, numeRezerva, format ? format->getLimitaSchimbari() : 6);
             }
+            catch (const EroareRegulament& e) {
+                std::cout << e.what() << "\nAlege o alta actiune din meniu.\n";
+            }
+            catch (const EroareResurseEchipa& e) {
+                std::cout << e.what() << "\nVerifica lotul disponibil si incearca din nou.\n";
+            }
+        } else if (optiune == 3) {
+            try {
+                echipaMea.timeout();
+            }
+            catch (const EroareRegulament& e) {
+                std::cout << e.what() << "\nTe rog alege o alta optiune tactica.\n";
+            }
+        } else if (optiune == 4) {
+            tabulate::Table tabelInfoTeren;
+            tabelInfoTeren.add_row({"Zona", "Nume Jucator", "Post", "Stamina"});
+
+            for (int i = 1; i <= 6; i++) {
+                std::ostringstream ossZona, ossNume, ossPost, ossStamina;
+                ossZona << i;
+                ossNume << echipaMea.getJucator(i).getNume();
+                ossPost << numePostText(echipaMea.getJucator(i).getPost());
+                ossStamina << echipaMea.getJucator(i).getStamina() << "%";
+
+
+                tabelInfoTeren.add_row({ossZona.str(), ossNume.str(), ossPost.str(), ossStamina.str()});
+            }
+            std::cout << "\n--- INFORMATII DETALIATE TEREN ---\n";
+            std::cout << tabelInfoTeren << std::endl;
+        } else if (optiune == 5) {
+            if (format != nullptr) {
+                MeciOficial* meciOficial = dynamic_cast<MeciOficial*>(format);
+                if (meciOficial != nullptr) {
+                    if (!ultimulPunctAdversar || puncteAdversari == 0) {
+                        std::cout<<"Poti cere Video Challenge doar imediat dupa un punct pierdut\n";
+                    }
+                    else {
+                        if (meciOficial->solicitaChallengeVideo(echipaMea.getNumeEchipa())) {
+                            puncteAdversari--;
+                            puncteProprii++;
+                            ultimulPunctAdversar = false;
+                        } else {
+                            ultimulPunctAdversar = false;
+                        }
+                    }
+                } else {
+                    std::cout << ">>> In formatul '" << format->getNumeFormat()
+                              << "' nu exista arbitraj video (Video Challenge)!\n";
+                }
+            } else {
+                std::cout << ">>> Nu este setat un format de meci activ!\n";
+            }
+        } else if (optiune == 6) {
+            meciAbandonat = true;
+            return;
         }
-    }while (optiune != 1);
+    } while (optiune != 1);
 }
 
- void Set::inlocuiesteJucatorAccidentat(Echipa& echipa, int zonaAtac) {
+ bool Set::inlocuiesteJucatorAccidentat(Echipa& echipa, int zonaAtac) {
     const Jucator& accidentatOriginal = echipa.getJucator(zonaAtac);
     if (!accidentatOriginal.esteIndisponibil()) {
-        return;
+        return false;
     }
 
     std::cout << ">>> [ACCIDENTARE] " << accidentatOriginal.getNume()
@@ -195,7 +266,7 @@ void Set::afisareMeniuTactic() {
 
     if (numeInlocuitor.empty()) {
         std::cout << ">>> Nu mai exista rezerve disponibile pe banca pentru schimbare!\n";
-        return;
+        return true;
     }
 
     echipa.revinoLaAsezareaInitiala();
@@ -212,10 +283,17 @@ void Set::afisareMeniuTactic() {
         std::cout << ">>> Schimbare medicala de urgenta: intra " << numeInlocuitor
                   << " in locul lui " << echipa.getJucator(zonaCorectaSchimbare).getNume()
                   << " (zona initiala " << zonaCorectaSchimbare << ")!\n";
-        echipa.efectueazaSchimbare(zonaCorectaSchimbare, numeInlocuitor);
+        try {
+            echipa.efectueazaSchimbare(zonaCorectaSchimbare, numeInlocuitor, 99);
+        } catch (const EroareRegulament& e) {
+            std::cout << ">>> [Exceptie Regulament la schimbarea medicala]: " << e.what() << "\n";
+        } catch (const EroareResurseEchipa& e) {
+            std::cout << ">>> [Exceptie Resurse la schimbarea medicala]: " << e.what() << "\n";
+        }
     }
 
     echipa.jucatoriPePosturiFixe();
+    return true;
 }
 
 void Set::simuleazaRaliu() {
@@ -321,7 +399,11 @@ void Set::simuleazaRaliu() {
             std::cout << "Setter-ul " << echipaAdversa.getJucator(zonaSetterAdvers).getNume()
                           << " ridica pentru atacul lui " << echipaAdversa.getJucator(zonaAtacAdvers).getNume()
                           << " (Zona " << zonaAtacAdvers << ")!" << std::endl;
-            inlocuiesteJucatorAccidentat(echipaAdversa, zonaAtacAdvers);
+
+            if (inlocuiesteJucatorAccidentat(echipaAdversa, zonaAtacAdvers)) {
+                std::cout << ">>> Arbitrul opreste raliul pentru accidentare! Punctul se reia.\n";
+                return;
+            }
 
             int catiBlocheaza = 0;
             while (catiBlocheaza < 1 || catiBlocheaza > 3) {
@@ -329,8 +411,7 @@ void Set::simuleazaRaliu() {
 
                 if (!(std::cin >> catiBlocheaza)) {
                     if (std::cin.eof()) {
-                        catiBlocheaza = 1;
-                        break;
+                        return;
                     }
                     std::cin.clear();
                     std::cin.ignore(10000, '\n');
@@ -434,10 +515,7 @@ void Set::simuleazaRaliu() {
                 std::cout << "Introdu zona atacantului dorit: ";
                 if (!(std::cin >> zonaAtacAleasa)) {
                     if (std::cin.eof()) {
-                        if (!zoneValideAtac.empty()) {
-                            zonaAtacAleasa = zoneValideAtac.front();
-                        }
-                        break;
+                        return;
                     }
                     std::cin.clear();
                     std::cin.ignore(10000, '\n');
@@ -452,7 +530,10 @@ void Set::simuleazaRaliu() {
             }
             double punctajAtacMeu = echipaMea.getJucator(zonaAtacAleasa).executaAtac(punctajPasaMea);
             std::cout << echipaMea.getJucator(zonaAtacAleasa).getNume() << " ataca din zona " << zonaAtacAleasa << "!" << std::endl;
-            inlocuiesteJucatorAccidentat(echipaMea, zonaAtacAleasa);
+            if (inlocuiesteJucatorAccidentat(echipaMea, zonaAtacAleasa)) {
+                std::cout << ">>> Arbitrul opreste raliul pentru accidentare! Punctul se reia.\n";
+                return;
+            }
             int catiBlocheazaBot = 2;
             if (nivelPreluare == 1) {
                 catiBlocheazaBot = (std::rand() % 2) + 2;
@@ -494,7 +575,7 @@ void Set::simuleazaRaliu() {
                 double rezultatDefensivaBot = echipaAdversa.getJucator(zonaAparareBot).executaPreluare(fortaAtacRamasa);
 
                 if (rezultatDefensivaBot > 0.0) {
-                    std::cout << " Adversarul salveaza mingea prin "<< echipaAdversa.getJucator(zonaAparareBot).getNume() << "! Raliul continua!" << std::endl;
+                    std::cout << "Adversarul salveaza mingea prin "<< echipaAdversa.getJucator(zonaAparareBot).getNume() << "! Raliul continua!" << std::endl;
                     punctajPreluareCurenta = rezultatDefensivaBot;
                     echipaMeaAtaca = false;
                 } else {
@@ -510,7 +591,20 @@ void Set::simuleazaRaliu() {
 void Set::joacaSet() {
     std::cout << " Incepe setul: " << echipaMea.getNumeEchipa() << " vs " << echipaAdversa.getNumeEchipa() << std::endl;
     echipaMea.setNumarTimeout(0);
-    while (!std::cin.eof() && ((puncteProprii < 15 && puncteAdversari < 15) || std::abs(puncteProprii - puncteAdversari) < 2)) {        afisareMeniuTactic();
+
+    while (!std::cin.eof()) {
+        if (format != nullptr) {
+            if (format->esteSetTerminat(numarSet, puncteProprii, puncteAdversari)) {
+                break;
+            }
+        } else {
+            if ((puncteProprii >= 25 || puncteAdversari >= 25) && std::abs(puncteProprii - puncteAdversari) >= 2) {
+                break;
+            }
+        }
+
+        afisareMeniuTactic();
+        if (meciAbandonat) return;
         if (std::cin.eof()) {
             break;
         }
@@ -521,12 +615,14 @@ void Set::joacaSet() {
             break;
         }
     }
+
     echipaMea.scoateLibero();
     echipaAdversa.scoateLibero();
+
     if (AmCastigat()) {
         std::cout << " SET CASTIGAT DE " << echipaMea.getNumeEchipa() << " (" << puncteProprii << " - " << puncteAdversari << ")!" << std::endl;
     } else {
-        std::cout << " SET CASTIGAT DE " << echipaAdversa.getNumeEchipa() << " (" << puncteAdversari << " - " << puncteProprii << ")!" <<std::endl;
+        std::cout << " SET CASTIGAT DE " << echipaAdversa.getNumeEchipa() << " (" << puncteAdversari << " - " << puncteProprii << ")!" << std::endl;
     }
 }
 

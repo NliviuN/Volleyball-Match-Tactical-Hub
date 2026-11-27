@@ -2,10 +2,15 @@
 
 #include<random>
 
+#include "ExceptiiVolei.h"
+
 
 Jucator::Jucator(const std::string & nume_, PostJucator post_ ,const StatisticiJucator& statistici_ , bool accidentat_) :
-nume(nume_), post(post_), statistici(statistici_), accidentat(accidentat_)
-{}
+nume(nume_), post(post_), statistici(statistici_), accidentat(accidentat_) {
+    if (nume.empty()) {
+        throw EroareDate("Numele jucatorului nu poate fi gol!");
+    }
+}
 
 double Jucator::aplicaEroare(double valoareBaza, int minEroare, int maxEroare) {
     static std::random_device rd;
@@ -124,7 +129,7 @@ std:: ostream& operator<<(std:: ostream& os, const Jucator& j) {
         case PostJucator::Setter: os << "Setter"; break;
         case PostJucator::Outside_Hitter: os << "Outside Hitter"; break;
     }
-    os << ", " << j.statistici;
+    os << "\n" << j.statistici;
     return os;
 }
 
