@@ -155,3 +155,27 @@ double TurneuRapid::calculeazaRecuperareStamina() const {
 int TurneuRapid::getLimitaSchimbari() const {
     return 4;
 }
+
+GoldenSet::GoldenSet(int seturiPentruVictorie, int punctePerSet) : FormatMeci("GoldenSet", seturiPentruVictorie, punctePerSet) {}
+
+void GoldenSet::afiseazaDetaliiSpecifice(std::ostream& os) const {
+    os<<"Set unic decisiv | Diferenta minima victorie: 2";
+}
+
+std::unique_ptr<FormatMeci> GoldenSet::clone() const {
+    return std::make_unique<GoldenSet>(*this);
+}
+
+bool GoldenSet::esteSetTerminat(int /*numarSet*/, int puncteGazda, int puncteOaspete) const {
+    if ((puncteGazda >= getPunctePerSet() || puncteOaspete >= getPunctePerSet()) && std::abs(puncteGazda - puncteOaspete) >= 2) {
+        return true;
+    }
+    return false;
+}
+double GoldenSet::calculeazaRecuperareStamina() const {
+    return 0;
+}
+
+int GoldenSet::getLimitaSchimbari() const {
+    return 2;
+}

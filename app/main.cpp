@@ -608,6 +608,7 @@ static void joacaMeciComplet(Echipa &echipa1, Echipa &echipa2) {
     formateDisponibile.push_back(std::make_unique<MeciOficial>());
     formateDisponibile.push_back(std::make_unique<MeciAmical>());
     formateDisponibile.push_back(std::make_unique<TurneuRapid>());
+    formateDisponibile.push_back(std::make_unique<GoldenSet>());
 
     int optiuneFormat;
     while (true) {

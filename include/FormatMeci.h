@@ -88,4 +88,19 @@ public:
     int getLimitaSchimbari() const override;
 };
 
+class GoldenSet : public FormatMeci {
+
+protected:
+
+    void afiseazaDetaliiSpecifice(std::ostream &os) const override;
+
+public:
+    explicit GoldenSet(int seturiPentruVictorie = 1, int punctePerSet = 15);
+
+    std::unique_ptr<FormatMeci> clone() const override;
+
+    bool esteSetTerminat(int numarSet, int puncteGazda, int puncteOaspete) const override;
+    double calculeazaRecuperareStamina() const override;
+    int getLimitaSchimbari() const override;
+};
 #endif //OOP_FORMATMECI_H
